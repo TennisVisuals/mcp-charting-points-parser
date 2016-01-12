@@ -3,6 +3,7 @@
   "version": "0.0.2",
   "description": "Parse MCP .csv files containing point/shot match data",
   "main": "mcpParse.js",
+  "license": "MIT",
   "author": "TennisVisuals",
   "repository": "none",
   "dependencies": {
