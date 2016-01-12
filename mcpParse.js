@@ -109,7 +109,7 @@ module.exports = function() {
 
       csv_parser.on('complete', function (matches) {
          if (matches) {
-            console.log('Matches Loaded\r\nParsing Shot Sequenes...');
+            console.log('Matches Loaded\r\nParsing Shot Sequences...');
             parseMatches(matches);      
          }
       });
