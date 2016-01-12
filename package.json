@@ -1,0 +1,12 @@
+{
+  "name": "mcp-csv-parser",
+  "version": "0.0.2",
+  "description": "Parse MCP .csv files containing point/shot match data",
+  "main": "mcpParse.js",
+  "author": "TennisVisuals",
+  "repository": "none",
+  "dependencies": {
+    "chardet": "^0.1.0",
+    "d3": "^3.5.12"
+  }
+}
