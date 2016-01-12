@@ -156,7 +156,7 @@ module.exports = function() {
       // parse match_id for player and tournament data
       var players = parsePlayers(points[0].match_id);
       var tournament = parseTournament(points[0].match_id);
-      var date = parseDate(points[0].match_id);
+      tournament.date = parseDate(points[0].match_id);
 
       // create UMO to generate valid point progression
       var UMO_shot_seq = new mo.matchObject();
@@ -283,7 +283,11 @@ module.exports = function() {
    }
 
    function parseDate(match_id) {
-      return new Date();
+      var splitMatchID = match_id.split('-');
+      var dt = splitMatchID[0];
+      var date = dt.slice(4,6) + '-' + dt.slice(6,8) + '-' + dt.slice(0,4);
+      var match_date = new Date(date);
+      return match_date;
    }
 
    function parseTournament(match_id) {
@@ -307,7 +311,7 @@ module.exports = function() {
       if (tournament.name.indexOf('Fed Cup') == 0) tournament.name = 'Fed Cup';
 
       if (tournament.name.match(' CH'+'$') == ' CH') {
-         tournament.name = tournament.name.slice(0, tournament.length - 3);
+         tournament.name = tournament.name.slice(0, tournament.name.length - 3);
          tournament.tour = 'ch';
       }
 
@@ -320,7 +324,7 @@ module.exports = function() {
       }
 
       if (tournament.name.match(' Q'+'$') == ' Q') {
-         tournament.name = tournament.name.slice(0, tournament.length - 2);
+         tournament.name = tournament.name.slice(0, tournament.name.length - 2);
          tournament.draw = 'qual';
       }
 
