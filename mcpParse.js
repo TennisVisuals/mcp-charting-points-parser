@@ -177,7 +177,13 @@ module.exports = function() {
          // null point encountered
          if (parsed_point_sequence.continue) continue;
 
-         var result_shot_seq = UMO_shot_seq.push({ winner: parsed_point_sequence.point });
+         var result_shot_seq = UMO_shot_seq.push(
+               { 
+                  winner: parsed_point_sequence.point, 
+                  shots:  parsed_point_sequence.shots, 
+                  rally:  parsed_point_sequence.rally 
+               }
+         );
 
          // abort with error
          if (result_shot_seq.error) return result_shot_seq;
@@ -201,10 +207,13 @@ module.exports = function() {
       }
 
       if (s1result.point == 'S' || !serve2 ) {
+         s1result.serves = 1;
          return s1result;
       }
 
-      return shotParser(serve2, 2);
+      s2result = shotParser(serve2, 2);
+      s2result.serves = 2;
+      return s2result;
    }
 
    function shotParser(point, which_serve) {
@@ -413,7 +422,7 @@ module.exports = function() {
          if (ppp.continue || pps.continue) continue;
 
          var result_PtsAfter = UMO_PtsAfter.push(ppp.point);
-         var result_shot_seq = UMO_shot_seq.push({ winner: pps.point });
+         var result_shot_seq = UMO_shot_seq.push({ winner: pps.point, shots: pps.shots, rally: pps.rally });
 
          // compare points returned by UMO for each parser
          if (debug && result_PtsAfter.point.point != result_shot_seq.point.point) {
