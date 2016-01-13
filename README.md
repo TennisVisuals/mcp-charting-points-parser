@@ -20,7 +20,7 @@ Navigate to the directory above the project directory
 ```
 node
 > p = require('./mcpParse')()
-> p.parseArchive('testing', results => parsed = results)
+> p.parseArchive('testing')
 Loading File:./mcpParse/cache/testing.csv
 Please be patient if file is large...
 Parsing CSV File...
@@ -32,9 +32,9 @@ Parsing Shot Sequences...
 1 Matches Successfully Parsed
 > parsed.matches.length
 1
-> parsed.matches[0].match.players()
+> p.matches[0].match.players()
 [ 'Diego Sebastian Schwartzman', 'Horacio Zeballos' ]
-> parsed.matches[0].match.score().match_score
+> p.matches[0].match.score().match_score
 '7-6(0), 4-6, 6-1'
 ```
 
