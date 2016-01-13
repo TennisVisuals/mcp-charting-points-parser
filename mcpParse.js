@@ -214,9 +214,9 @@ module.exports = function() {
       s2result = shotParser(serves[1], 2);
       s2result.serve = 2;
       s2result.first_serve = { serves: s1result.serves, }
-      if (s1result.lets) s2result.first_serve.lets = s2result.lets;
-      if (s1result.error) s2result.first_serve.error = s2result.error;
-      if (s1result.parse_notes) s2result.first_serve.parse_notes = s2result.parse_notes;
+      if (s1result.lets) s2result.first_serve.lets = s1result.lets;
+      if (s1result.error) s2result.first_serve.error = s1result.error;
+      if (s1result.parse_notes) s2result.first_serve.parse_notes = s1result.parse_notes;
 
       s2result.code = code;
       return s2result;
@@ -349,7 +349,14 @@ module.exports = function() {
       if (!terminator && !serves.length && rally.length == 1 && ['Q', 'S', 'P', 'R'].indexOf(rally[0]) >= 0) {
          result = rally[0];
       }
-      return { serves: serves, rally: rally, lets: lets, terminator: terminator, result: result, ignored: ignored_shots };
+      var analysis = { serves: serves, rally: rally };
+      if (lets) analysis.lets = lets;
+      if (terminator) analysis.terminator = terminator;
+      if (result) analysis.result = result;
+      if (ignored_shots && ignored_shots.length) analysis.ignored = ignored_shots;
+
+      //var analysis = { serves: serves, rally: rally, lets: lets, terminator: terminator, result: result, ignored: ignored_shots };
+      return analysis
    }
 
    function containsTerminator(shot) {
