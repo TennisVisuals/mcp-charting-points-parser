@@ -119,7 +119,7 @@ module.exports = function() {
          var errors = [];
          var bar = new ProgressBar(':bar', { total: match_array.length });
          for (var m=0; m < match_array.length; m++) {
-            try {
+            //try {
                if (validate) {
                   // compares two methods of parsing
                   var result = csv_parser.validateMatch(match_array[m]);
@@ -136,15 +136,17 @@ module.exports = function() {
                   parsed_matches.push(result);
                }
                bar.tick();
-            }
+            //}
 
-            catch(err) {
-               errors.push('Parsing Failed: ' + match_array[m].match_id);
-               console.log(err);
-            }
+            //catch(err) {
+            //   errors.push('Parsing Failed: ' + match_array[m].match_id);
+            //   console.log(err);
+            //}
          }
          console.log(parsed_matches.length + ' Matches Successfully Parsed');
          if (errors.length) console.log(errors.length + ' Parsing Errors');
+         mcp.matches = parsed_matches;
+         mcp.errors = errors;
          if (typeof callback == 'function') callback({ matches: parsed_matches, errors: errors });
       }
    }
@@ -172,10 +174,13 @@ module.exports = function() {
       for (var p=0; p < points.length; p++) {
 
          // use UMO to validate point
-         var parsed_point_sequence = pointParser(points[p]);
+         var serves = getServes(points[p]);
+         var parsed_point_sequence = pointParser(serves);
 
          // null point encountered
-         if (parsed_point_sequence.continue) continue;
+         if (parsed_point_sequence.continue || !parsed_point_sequence.point) {
+            continue;
+         }
 
          var result_shot_seq = UMO_shot_seq.push(
                { 
@@ -186,83 +191,213 @@ module.exports = function() {
          );
 
          // abort with error
-         if (result_shot_seq.error) return result_shot_seq;
+         if (result_shot_seq.error) { return result_shot_seq; }
       }
 
       // return players and score
       return { match: UMO_shot_seq, tournament: tournament };
    }
 
-   function pointParser(value) {
-      var serve1 = value['1st'];
-      var serve2 = value['2nd'];
+   function getServes(value) {
+      return [value['1st'], value['2nd']];
+   }
 
+   mcp.pointParser = pointParser;
+   function pointParser(serves) {
+      var code = serves.join('|');
       // parse first serve in case it ends the point
       // sometimes there is erroneous 2nd serve data
-      var s1result = shotParser(serve1, 1);
+      var s1result = shotParser(serves[0], 1);
 
-      // handle situations where 1st and 2nd serve contained in 1st serve coding
-      if (s1result.remnant) {
-         if (!serve2) serve2 = s1result.remnant;
-      }
-
-      if (s1result.point == 'S' || !serve2 ) {
-         s1result.serves = 1;
+      if (s1result.point == 'S' || !serves[1] ) {
+         s1result.serve = 1;
+         s1result.code = code;
          return s1result;
       }
 
-      s2result = shotParser(serve2, 2);
-      s2result.serves = 2;
+      s2result = shotParser(serves[1], 2);
+      s2result.serve = 2;
+      s2result.first_serve = { serves: s1result.serves, }
+      if (s1result.lets) s2result.first_serve.lets = s2result.lets;
+      if (s1result.error) s2result.first_serve.error = s2result.error;
+      if (s1result.parse_notes) s2result.first_serve.parse_notes = s2result.parse_notes;
+
+      s2result.code = code;
       return s2result;
    }
 
-   function shotParser(point, which_serve) {
+   mcp.shotParser = shotParser;
+   function shotParser(shot_sequence, which_serve) {
 
-      // remove all lets
-      point = point.split('c').join('');
+      var point;
+      var parsed_shots = analyzeSequence(shot_sequence);
 
-      var shots = shotSplitter(point);
-      var winner;
+      if (['Q', 'S'].indexOf(parsed_shots.result) >= 0) {
+         parsed_shots.point = 'S';
+         return parsed_shots;
+      }
+
+      if (['P', 'R'].indexOf(parsed_shots.result) >= 0) {
+         parsed_shots.point = 'R';
+         return parsed_shots;
+      }
+
+      // if there is not a terminator for second serve Receiver is always the winner
+      if (!parsed_shots.terminator) {
+         if (!shotFault(parsed_shots.serves[0]) && parsed_shots.serves.length > 2) {
+            parsed_shots.point = 'R'; 
+            return parsed_shots;
+         }
+      }
 
       // even number of shots implies Receiver made final shot
-      var last_player = shots.length % 2 == 0 ? 'R' : 'S';
-      var final_shot = shots[shots.length - 1];
+      var last_player = (parsed_shots.serves.length + parsed_shots.rally.length) % 2 == 0 ? 'R' : 'S';
+      var final_shot = parsed_shots.rally.length ? parsed_shots.rally[parsed_shots.rally.length - 1] : parsed_shots.serves[parsed_shots.serves.length - 1];
 
-      if (!final_shot) return { continue: true };
-
-      // check if the first shot finished the point
-      if (shots.length > 1 && shotFault(shots[0])) {
-         var result = { point: 'R', shots: [shots[0]], rally: 0, code: point, remnant: shots.slice(1).join('') };
-         return result;
+      // if there is no shot in the sequence, continue to next shot_sequence
+      if (!final_shot) { 
+         return { continue: true };
       }
 
-      if (shots.length == 1) {
-         if (final_shot.indexOf('#') > 0 || final_shot == 'Q' || final_shot == 'S') {
-            winner = 'S';
-         } else if (shotFault(final_shot) || final_shot == 'P' || final_shot == 'R') {
-            winner = 'R';
-         } else if (final_shot.indexOf('*') > 0) {
-            winner = 'S';
+      // if there is no rally
+      if (!parsed_shots.rally.length) {
+         if (parsed_shots.terminator == '*') { 
+            parsed_shots.result = 'Ace'; 
+            parsed_shots.point = 'S';
+         } else if (parsed_shots.terminator == '#') { 
+            parsed_shots.result = 'Serve Winner'; 
+            parsed_shots.point = 'S';
+         } else if (shotFault(parsed_shots.serves[0])) {
+            parsed_shots.error = assignError(parsed_shots.serves[0]);
+            if (which_serve == 2) {
+               parsed_shots.result = 'Double Fault';
+               parsed_shots.point = 'R';
+            }
+         } else {
+            parsed_shots.parse_notes = 'treated as a fault';
+         }
+         return parsed_shots;
+      }
+
+      if (final_shot.indexOf('#') >= 0) {
+         parsed_shots.result = 'Forced Error';
+         parsed_shots.error = assignError(final_shot);
+         if (!shotFault(parsed_shots.serves[0])) {
+            parsed_shots.point = (last_player == 'R') ? 'S' : 'R';
+         } else {
+            // doesn't make sense, but this is how the spreadsheet does it...
+            parsed_shots.point = 'S';
          }
       } else if (final_shot.indexOf('*') >= 0) {
-         if (shotFault(final_shot) && debug) console.log('CONTRADICTION: ', final_shot);
-         winner = last_player;
-      } else if (final_shot.indexOf('#') > 0 || final_shot.indexOf('@') > 0 || shotFault(final_shot)) {
-         winner = (last_player == 'R') ? 'S' : 'R';
-      } else {
-         winner = last_player;
+         parsed_shots.result = 'Winner';
+         parsed_shots.point = last_player;
+      } else if (final_shot.indexOf('@') >= 0) {
+         parsed_shots.result = 'Unforced Error';
+         parsed_shots.error = assignError(final_shot);
+         if (!shotFault(parsed_shots.serves[0])) {
+            parsed_shots.point = (last_player == 'R') ? 'S' : 'R';
+         } else {
+            // doesn't make sense, but this is how the spreadsheet does it...
+            parsed_shots.point = 'R';
+         }
+      } else if (!shotFault(parsed_shots.serves[0])) {
+         if (parsed_shots.serves.length && parsed_shots.rally.length > 1) {
+            parsed_shots.parse_notes = 'no terminator: receiver wins point';
+            parsed_shots.result = 'Unknown';
+            parsed_shots.point = 'R';
+         } else if (parsed_shots.rally.length == 1 && shotFault(final_shot)) {
+            parsed_shots.error = assignError(final_shot);
+            parsed_shots.point = (last_player == 'R') ? 'S' : 'R';
+         }
+      } else if (parsed_shots.rally.length == 1 && shotFault(final_shot)) {
+         parsed_shots.error = assignError(final_shot);
+         parsed_shots.point = (last_player == 'R') ? 'S' : 'R';
       }
-      return { point: winner, shots: shots, rally: shots.length - 1, code: point };
+
+      return parsed_shots;
+   }
+
+   function assignError(shot) {
+      var errors = {'n': 'Net', 'w': 'Out Wide', 'd': 'Out Deep', 'x': 'Out Wide and Deep', 'g': 'Foot Fault', 'e': 'Unknown', '!': 'Shank' };
+      var error = shotFault(shot);
+      if (error) return errors[error];
+   }
+
+   mcp.analyzeSequence = analyzeSequence;
+   function analyzeSequence(shot_sequence) {
+      var result;
+      var terminator;
+      var ignored_shots;
+
+      // count lets
+      var lets = shot_sequence.split('c').length - 1;
+      // remove all lets
+      shot_sequence = shot_sequence.split('c').join('');
+
+      var shots = shotSplitter(shot_sequence);
+      var trimmed_shots = shots;
+
+      // eliminate any sequence data following terminator
+      for (var s = shots.length - 1; s>=0; s--) {
+         terminator = containsTerminator(shots[s]);
+         if (terminator) {
+            trimmed_shots = shots.slice(0, s + 1);
+            ignored_shots = shots.slice(s + 1);
+            result = shots[s];
+            break;
+         }
+      }
+      var serves = findServes(trimmed_shots);
+      var rally = serves.length ? trimmed_shots.slice(serves.length) : trimmed_shots;
+
+      if (!terminator && !serves.length && rally.length == 1 && ['Q', 'S', 'P', 'R'].indexOf(rally[0]) >= 0) {
+         result = rally[0];
+      }
+      return { serves: serves, rally: rally, lets: lets, terminator: terminator, result: result, ignored: ignored_shots };
+   }
+
+   function containsTerminator(shot) {
+      if (!shot) return false;
+      var terminators = ['#', '@', '*'];
+      for (var t=0; t < terminators.length; t++) {
+         if (shot.indexOf(terminators[t]) >= 0) return terminators[t];
+      }
+      return false;
+   }
+
+   function findServes(shots) {
+      if (!shots) return [];
+      var serves = [];
+      var rally = [];
+      var serve_codes = '0456'.split('');
+      for (var s=0; s < shots.length; s++) {
+         if (shots[s].length && serve_codes.indexOf(shots[s][0]) >= 0) {
+            serves.push(shots[s]);
+         }
+      }
+      return serves;
    }
 
    function shotSplitter(point) {
-      var strokes = '0456fbrsvzopuylmhijktq'.split('');
+      var strokes = '0456fbrsvzopuylmhijktq';
+      var stroke_array = strokes.split('');
       var shots = [];
+
+      // remove any leading characters that are not considered strokes
+      var leading_characters = true;
+      while(leading_characters) { 
+         if (point && '+-='.indexOf(point[0]) >= 0) {
+            point = point.slice(1); 
+         } else {
+            leading_characters = false;
+         }
+      }
+
       var fodder = point.slice();
       var nextfodder;
       while(fodder.length) {
          for (var l=1; l < fodder.length; l++) {
-            if (strokes.indexOf(fodder[l]) >= 0) { 
+            if (stroke_array.indexOf(fodder[l]) >= 0) { 
                shots.push(fodder.slice(0,l)); 
                nextfodder = fodder.slice(l); 
                break;
@@ -278,9 +413,10 @@ module.exports = function() {
    }
 
    function shotFault(shot) {
+      if (!shot) return false;
       var faults = 'nwdxge!'.split('');
       for (var f=0; f < faults.length; f++) {
-         if (shot.indexOf(faults[f]) >= 0) return true;
+         if (shot.indexOf(faults[f]) >= 0) return faults[f];
       }
       return false;
    }
@@ -389,6 +525,15 @@ module.exports = function() {
       if (!match || !match.points) return false;
       var points = match.points;
 
+      var debug_list = [
+         '20140118-W-Australian_Open-R32-Maria_Sharapova-Alize_Cornet',
+         '19811130-W-Australian_Open-F-Martina_Navratilova-Chris_Evert',
+         '20131005-M-Tokyo-SF-Nicolas_Almagro-Juan_Martin_Del_Potro',
+         '19991122-M-Tour_Finals-RR-Pete_Sampras-Andre_Agassi'
+      ];
+
+      var debug_file = (debug_list.indexOf(points[0].match_id) >= 0) ? true : false;
+
       // parse match_id for player and tournament data
       var players = parsePlayers(points[0].match_id);
       var tournament = parseTournament(points[0].match_id);
@@ -416,17 +561,23 @@ module.exports = function() {
 
          // use UMO to validate point
          var ppp = ptsAfter(points[p]);
-         var pps = pointParser(points[p]);
+         var serves = getServes(points[p]);
+         var pps = pointParser(serves);
 
          // null point encountered
          if (ppp.continue || pps.continue) continue;
+
+         if (!ppp.point || !pps.point) {
+            console.log('missing point', ppp.point, pps.point);
+            continue;
+         }
 
          var result_PtsAfter = UMO_PtsAfter.push(ppp.point);
          var result_shot_seq = UMO_shot_seq.push({ winner: pps.point, shots: pps.shots, rally: pps.rally });
 
          // compare points returned by UMO for each parser
-         if (debug && result_PtsAfter.point.point != result_shot_seq.point.point) {
-            console.log(pps.point, '\t' + result_shot_seq.point.point, '\t' + ppp.point, '\t' + resultresult_PtsAfter.point.point, '\t' + pps.code);
+         if (debug_file && result_PtsAfter.point && result_shot_seq.point && result_PtsAfter.point.point != result_shot_seq.point.point) {
+            console.log(pps.point, '\t' + result_shot_seq.point.point, '\t' + ppp.point, '\t' + result_PtsAfter.point.point, '\t' + pps.code);
          }
 
          // abort with error
@@ -448,8 +599,8 @@ module.exports = function() {
 
       // small parser for ptsAfter column of MCP .csv files
       function ptsAfter(value) {
+         if (!value || !value.PtsAfter) return { continue: true };
          var point = value.PtsAfter.slice();
-         if (!point) return { continue: true };
 
          // reverse point if second player serving
          if (points[p].Svr == 2) { point = point.split('-').reverse().join('-'); }
