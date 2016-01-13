@@ -182,13 +182,9 @@ module.exports = function() {
             continue;
          }
 
-         var result_shot_seq = UMO_shot_seq.push(
-               { 
-                  winner: parsed_point_sequence.point, 
-                  shots:  parsed_point_sequence.shots, 
-                  rally:  parsed_point_sequence.rally 
-               }
-         );
+         parsed_point_sequence.winner = parsed_point_sequence.point;
+         parsed_point_sequence.point = undefined;
+         var result_shot_seq = UMO_shot_seq.push(parsed_point_sequence);
 
          // abort with error
          if (result_shot_seq.error) { return result_shot_seq; }
