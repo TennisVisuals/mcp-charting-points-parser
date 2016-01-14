@@ -42,27 +42,29 @@ Parsing Shot Sequences...
 ```
 Each match can be queried/navigated using "accessors":
 ```
-> p.matches[0].match.players()
+> match = p.matches[0].match
+
+> players = match.players()
 [ 'Roger Federer', 'Novak Djokovic' ]
 
-> p.matches[0].tournament
+> match.tournament
 { name: 'Tour Finals',
   division: 'M',
   date: Sun Nov 22 2015 00:00:00 GMT+0100 (CET) }
 
-> p.matches[0].match.score().match_score
+> match.score().match_score
 '6-3, 6-4'
 
 > p.matches[0].match.score().winner
 'Novak Djokovic'
 
-> parsed.matches[0].match.points()
+> match.points()
 ...
 ```
 
 A single point looks like this:
 ```
-> p.matches[0].match.points()[0]
+> point = match.points()[0]
 { serves: [ '6' ],
   rally: [ 'b19', 'f3', 'b2', 'b1n@' ],
   terminator: '@',
@@ -79,14 +81,14 @@ A single point looks like this:
 For **winner** and **server**,  '0' and '1' indicate the array position of the player.  The server of the point is:
 
 ```
-> p.matches[0].match.players()[0]
+> players[point.server]
 'Roger Federer'
 ```
 
 The winner of the point would be:
 
 ```
-> p.matches[0].match.players()[1]
+> players[point.winner]
 'Novak Djokovic'
 ```
 ### Convenience
@@ -99,7 +101,7 @@ Several convenience function are provided for working with the match data
 ```
 **decipherPoint()** provides an english-language translation of a point.
 ```
-> p.decipherPoint(p.matches[0].match.points()[0])
+> p.decipherPoint(point)
 [ 'T Serve',
   'Backhand cross-court; Close to Baseline',
   'Forehand down the line',
@@ -132,7 +134,7 @@ The first few analysis function are looking at data quality.  These function are
 **rallyDepth()** counts the number of points in a match which have a return of service, and differentiates returns which finish a point and returns which include an indication of the depth of the return. In the example below there are three "return-other" shots; these are returns of service which have no depth information and do not finish the point.
 
 ```
-> p.az.rallyDepth(p.matches[0].match.points())
+> p.az.rallyDepth(match.points())
 { points: 115,
   returns: 101,
   return_finish: 22,
@@ -149,7 +151,7 @@ The first few analysis function are looking at data quality.  These function are
 ```
 **serveAnalysis()** counts the number of different types of serves charted for a given match while noting instances of invalid serve codes and cases where more than one serve were entered in the same shot sequence.
 ```
-> p.az.serveAnalysis(p.matches[0].match.points())
+> p.az.serveAnalysis(match.points())
 { serve_types:
    { '4': 44,
      '5': 17,
