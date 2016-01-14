@@ -135,7 +135,7 @@ The first few analysis function are looking at data quality.  These function are
      '5d': 1 },
   invalid_serves: 0 }
 ```
-**matchesServeAnalysis()** runs **serveAnalysis** for an array of matches and gives an aggregate result. According to the MCP data, the most common serve for women is a 'Body' serve, while the most common serve for men is 'Out Wide'; women make 'down-the-T' aces about 1.27 times as often as 'out-wide' aces, while men make 'down-the-T' aces about 1.18 times as often as 'out-wide' aces. There have been 538 invalid serves coded for women's matches (1.41/match) and 983 invalid serves coded for men's matches (1.14/match). Rarely multiple serves are coded as part of the same shot sequence; this happened 6 times for men's matches.
+**matchesServeAnalysis()** runs **serveAnalysis** for an array of matches and gives an aggregate result. According to the MCP data, the most common serve for women is a 'Body' serve, while the most common serve for men is 'Out Wide'; women make 'down-the-T' aces about 1.27 times as often as 'out-wide' aces, while men make 'down-the-T' aces about 1.18 times as often as 'out-wide' aces. There have been 538 invalid serves coded for women's matches (1.41/match) and 983 invalid serves coded for men's matches (1.14/match). Multiple serves are sometimes coded as part of the same shot sequence; this happened 6 times for men's matches.
 ```
 > p.az.matchesServeAnalysis(p.matches)
 ```
