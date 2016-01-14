@@ -47,7 +47,7 @@ Each match can be queried/navigated using "accessors":
 > players = match.players()
 [ 'Roger Federer', 'Novak Djokovic' ]
 
-> match.tournament
+> tournament = p.matches[0].tournament
 { name: 'Tour Finals',
   division: 'M',
   date: Sun Nov 22 2015 00:00:00 GMT+0100 (CET) }
