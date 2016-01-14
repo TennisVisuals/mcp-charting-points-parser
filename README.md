@@ -87,7 +87,14 @@ The winner of the point would be:
 > p.matches[0].match.players()[1]
 'Novak Djokovic'
 ```
+### Convenience
+Several convenience function are provided for working with the match data
 
+**playerMatches(match_array, player_name)** returns an array of all matches containing the specified player.  Call the function a second time to create an array of matches between two players.
+
+```
+> dj = p.az.playerMatches(p.matches, 'Djokovic')
+```
 ### Analysis
 
 I will continue adding analysis functions until a full stat package has been created.
