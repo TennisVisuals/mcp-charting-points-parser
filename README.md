@@ -42,15 +42,15 @@ Parsing Shot Sequences...
 ```
 Each match can be queried/navigated using "accessors":
 ```
-> match = p.matches[0].match
-
-> players = match.players()
-[ 'Roger Federer', 'Novak Djokovic' ]
-
 > tournament = p.matches[0].tournament
 { name: 'Tour Finals',
   division: 'M',
   date: Sun Nov 22 2015 00:00:00 GMT+0100 (CET) }
+
+> match = p.matches[0].match
+
+> players = match.players()
+[ 'Roger Federer', 'Novak Djokovic' ]
 
 > match.score().match_score
 '6-3, 6-4'
