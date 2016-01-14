@@ -106,9 +106,9 @@ The first two analysis function are looking at data quality.
   shots: 432,
   rally_depth: 0 }
 ```
-**matchRallies** runs a **rallyDepth** for an array of matches and gives an aggregate result.  It is useful for identifying matches where depth information is given for rally shots other than return of service.
+**matchWithRallyDepth()** runs **rallyDepth()** for an array of matches and gives an aggregate result.  It is useful for identifying matches where depth information is given for rally shots other than return of service.
 
 ```
-> p.az.matchRallies(p.matches)
+> p.az.matchesWithRallyDepth(p.matches)
 { rally_shots: 1640, rally_depth: 0, matches: [] }
 ```
