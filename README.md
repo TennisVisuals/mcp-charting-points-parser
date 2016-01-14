@@ -22,33 +22,37 @@ node
 
 > p = require('./mcpParse')()
 
-> p.parseArchive('testing')
-Loading File:./mcpParse/cache/testing.csv
+> p.parseArchive('example')
+Loading File:./mcpParse/cache/example.csv
 Please be patient if file is large...
+
 Parsing CSV File...
-235 points loaded
+657 points loaded
 Separating Matches...
-1 matches
+4 matches
 Matches Loaded
 Parsing Shot Sequences...
-1 Matches Successfully Parsed
+====
+4 Matches Successfully Parsed
 
-> parsed.matches.length
-1
+> p.matches.length
+4
 ```
 Each match can be queried/navigated using "accessors":
 ```
 > p.matches[0].match.players()
-[ 'Diego Sebastian Schwartzman', 'Horacio Zeballos' ]
-
-> p.matches[0].match.score().match_score
-'7-6(0), 4-6, 6-1'
+[ 'Roger Federer', 'Novak Djokovic' ]
 
 > p.matches[0].tournament
-{ name: 'Montevideo',
+{ name: 'Tour Finals',
   division: 'M',
-  tour: 'ch',
-  date: Fri Nov 20 2015 00:00:00 GMT+0100 (CET) }
+  date: Sun Nov 22 2015 00:00:00 GMT+0100 (CET) }
+
+> p.matches[0].match.score().match_score
+'6-3, 6-4'
+
+> p.matches[0].match.score().winner
+'Novak Djokovic'
 
 > parsed.matches[0].match.points()
 ...
@@ -58,11 +62,13 @@ A single point looks like this:
 ```
 > p.matches[0].match.points()[0]
 { serves: [ '6' ],
-  rally: [ 'b28', 'b3', 'b1', 'f2', 'f2', 'r2', 'r+3', 'b1', 'v1*' ],
-  terminator: '*',
-  result: 'Winner',
-  serve: 1,
-  code: '6b28b3b1f2f2r2r+3b1v1*|',
+  rally: [ 'b19', 'f3', 'b2', 'b1n@' ],
+  terminator: '@',
+  result: 'Unforced Error',
+  error: 'Net',
+  serve: 2,
+  first_serve: { serves: [ '4n' ], error: 'Net' },
+  code: '4n|6b19f3b2b1n@',
   winner: 1,
   point: '0-15',
   server: 0,
@@ -72,14 +78,14 @@ For **winner** and **server**,  '0' and '1' indicate the array position of the p
 
 ```
 > p.matches[0].match.players()[0]
-'Diego Sebastian Schwartzman'
+'Roger Federer'
 ```
 
 The winner of the point would be:
 
 ```
 > p.matches[0].match.players()[1]
-'Horacio Zeballos'
+'Novak Djokovic'
 ```
 
 ### Analysis
@@ -91,17 +97,18 @@ The first two analysis function are looking at data quality.
 **rallyDepth()** counts the number of points in a match which have a return of service, and differentiates returns which finish a point and returns which include an indication of the depth of the return. In the example below there are three "return-other" shots; these are returns of service which have no depth information and do not finish the point.
 
 ```
-p.rallyDepth(p.matches[0].match.points())
-{ points: 90,
-  returns: 75,
-  return_finish: 16,
-  return_depth: 58,
-  return_other: [ 'm2', 'm2', 'm2' ],
-  shots: 253,
+> p.az.rallyDepth(p.matches[0].match.points())
+{ points: 115,
+  returns: 101,
+  return_finish: 22,
+  return_depth: 79,
+  return_other: [ 'b3' ],
+  shots: 432,
   rally_depth: 0 }
 ```
 **matchRallies** runs a **rallyDepth** for an array of matches and gives an aggregate result.  It is useful for identifying matches where depth information is given for rally shots other than return of service.
 
 ```
-p.matchRallies(p.matches)
+> p.az.matchRallies(p.matches)
+{ rally_shots: 1640, rally_depth: 0, matches: [] }
 ```
