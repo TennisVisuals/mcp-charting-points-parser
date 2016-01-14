@@ -40,15 +40,27 @@ Parsing Shot Sequences...
 > p.matches.length
 4
 ```
-Each match can be queried/navigated using "accessors":
+Each match contains tournament information as well as a UMO which can be queried/navigated using "accessors":
 ```
 > tournament = p.matches[0].tournament
 { name: 'Tour Finals',
   division: 'M',
   date: Sun Nov 22 2015 00:00:00 GMT+0100 (CET) }
 
-> match = p.matches[0].match
-
+  > match = p.matches[0].match
+  { [Function: match]
+    options: [Function],
+    points: [Function],
+    winProgression: [Function],
+    gameProgression: [Function],
+    push: [Function],
+    pop: [Function],
+    players: [Function],
+    score: [Function],
+    reset: [Function] }
+```
+You won't need most of these accessors for match analysis; review the REAME for the Universal Match Object if you are interested in learning more about the accessors not covered in these examples.  
+```
 > players = match.players()
 [ 'Roger Federer', 'Novak Djokovic' ]
 
@@ -98,6 +110,7 @@ Several convenience function are provided for working with the match data
 
 ```
 > dj = p.az.playerMatches(p.matches, 'Djokovic')
+> djVrf = p.az.playerMatches(dj, 'Federer')
 ```
 **decipherPoint()** provides an english-language translation of a point.
 ```
