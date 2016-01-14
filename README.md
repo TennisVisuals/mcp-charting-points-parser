@@ -13,11 +13,12 @@ Uses Universal Match Object (UMO) https://github.com/TennisVisuals/universal-mat
 - move MCP .csv files into mcpParse/cache/ sub-directory
 *(two example files are provided, 'example' and 'testing')*
 
+Navigae into the 'mcpParse' directory and:
 ```
 npm install
 ```
 #### Module Usage
-Navigate to the directory above the project directory
+Navigate to the directory above the project directory:
 ```
 node
 
