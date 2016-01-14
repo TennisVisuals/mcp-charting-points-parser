@@ -5,7 +5,6 @@ module.exports = function() {
 
    // environment variables
    var mismatches = 0;
-   var debug = false;
 
    // cached files
    var cache_default = './mcpParse/cache/';
@@ -20,6 +19,7 @@ module.exports = function() {
 
    var mo             = require('./matchObject');
    mcp.az             = require('./analysis')();
+   mcp.st             = require('./statistics')();
 
    mcp.mcpCSVparser = mcpCSVparser;
    function mcpCSVparser (file_name, cache_directory) {
