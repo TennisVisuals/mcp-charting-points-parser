@@ -96,6 +96,32 @@ Several convenience function are provided for working with the match data
 ```
 > dj = p.az.playerMatches(p.matches, 'Djokovic')
 ```
+**decipherPoint()** provides an english-language translation of a point.
+```
+> p.decipherPoint(p.matches[0].match.points()[0])
+[ 'T Serve',
+  'Backhand cross-court; Close to Baseline',
+  'Forehand down the line',
+  'Backhand to the middle',
+  'Backhand to the left side; Netted; Unforced Error' ]
+```
+**decipherSequence()** provides an english-language translation of an MCP shot sequence. An optional second argument enables passing the point (e.g. '0-15') which aids in determining the trajectory of the return of service.
+```
+> p.decipherSequence('6f=37b+3b3z#', '0-15')
+[ 'T Serve',
+  'Forehand at the Baseline to the right side; Within Service Boxes',
+  'Backhand approach shot cross-court',
+  'Backhand cross-court',
+  'Backhand Volley; Forced Error' ]
+```
+**decipherShot()** provides an english-language translation of a single MCP shot.
+```
+> p.decipherShot('6*', '0-15')
+{ sequence: 'T Serve; Ace',
+  full_sequence: 'T Serve, Winner',
+  direction: 1 }
+  ```
+
 ### Analysis
 
 I will continue adding analysis functions until a full stat package has been created.

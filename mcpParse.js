@@ -347,7 +347,7 @@ module.exports = function() {
       var serves = findServes(trimmed_shots);
       var rally = serves.length ? trimmed_shots.slice(serves.length) : trimmed_shots;
 
-      if (!terminator && !serves.length && rally.length == 1 && ['Q', 'S', 'P', 'R'].indexOf(rally[0]) >= 0) {
+      if (!terminator && !serves.length && rally.length == 1 && ['S', 'P', 'Q', 'R'].indexOf(rally[0]) >= 0) {
          result = rally[0];
       }
       var analysis = { serves: serves, rally: rally };
@@ -358,6 +358,212 @@ module.exports = function() {
 
       //var analysis = { serves: serves, rally: rally, lets: lets, terminator: terminator, result: result, ignored: ignored_shots };
       return analysis
+   }
+
+   mcp.decipherPoint = decipherPoint;
+   function decipherPoint(point) {
+      if (!point || !point.serves || !point.rally) return false;
+      var sequence = point.serves.join('') + point.rally.join('');
+      return decipherSequence(sequence, point.point);
+   }
+
+   mcp.decipherSequence = decipherSequence;
+   function decipherSequence(sequence, point) {
+      var description = [];;
+      var shots = shotSplitter(sequence);
+      var origin = 0;
+      if (point) {
+         if (deuce_court_points.indexOf(point) >= 0) {
+            origin = 1;
+         } else if (ad_court_points.indexOf(point) >= 0) {
+            origin = 3;
+         }
+      }
+      shots.forEach(function(shot) {
+         var analysis = decipherShot(shot, point, origin);
+         description.push(analysis.sequence);
+         origin = analysis.direction;
+      });
+      return description;
+   }
+
+   mcp.decipherShot = decipherShot;
+   function decipherShot(shot, point, origin) {
+      // point is needed to determine side from which serve originated
+      // origin is the direction of the previous shot
+     
+      var assignments = {
+         'S': 'Server won the point',
+         'P': 'Penalty against Server',
+         'Q': 'Penalty against Receiver',
+         'R': 'Receiver won the point'
+      };
+      var errors = {
+         'n': 'Netted',
+         'w': 'Out Wide',
+         'd': 'Out Deep',
+         'x': 'Out Wide and Deep',
+         'g': 'Foot Fault',
+         'e': 'Unknown Error',
+         '!': 'Shank' 
+      };
+      var serves = {
+         '0':  'Unknown Serve',
+         '4':  'Wide Serve',
+         '5':  'Body Serve',
+         '6':  'T Serve'
+      };
+      var strokes = {
+         'f':  'Forehand',
+         'b':  'Backhand',
+         'r':  'Forehand Slice',
+         's':  'Backhand Slice',
+         'v':  'Forehand Volley',
+         'z':  'Backhand Volley',
+         'o':  'Overhead Smash',
+         'p':  'Backhand Overhead Smash',
+         'u':  'Forehand Drop Shot',
+         'y':  'Backhand Drop Shot',
+         'l':  'Forehand Lob',
+         'm':  'Backhand Lob',
+         'h':  'Forehand Half-volley',
+         'i':  'Backhand Half-volley',
+         'j':  'Forehand Drive Volley',
+         'k':  'Backhand Drive Volley',
+         't':  'Trick Shot',
+         'q':  'Unknown Shot'
+      };
+      var directions = {
+         '1':  'to Right Hander Forehand',
+         '2':  'Down the Middle',
+         '3':  'to Right Hander Backhand'
+      };
+      var depths = {
+         '7':  'Within Service Boxes',
+         '8':  'Past the Service Line',
+         '9':  'Close to Baseline'
+      };
+      var terminators = {
+         '*':  'Winner',
+         '#':  'Forced Error',
+         '@':  'Unforced Error'
+      };
+      var positions = {
+         '+': 'approach shot',
+         '-': 'at the Net',
+         '=': 'at the Baseline'
+      };
+
+      // create aggregate object
+      var babel = {};
+      Object.keys(errors).forEach(e => babel[e] = errors[e]);
+      Object.keys(serves).forEach(e => babel[e] = serves[e]);
+      Object.keys(strokes).forEach(e => babel[e] = strokes[e]);
+      Object.keys(directions).forEach(e => babel[e] = directions[e]);
+      Object.keys(depths).forEach(e => babel[e] = depths[e]);
+      Object.keys(terminators).forEach(e => babel[e] = terminators[e]);
+      Object.keys(positions).forEach(e => babel[e] = positions[e]);
+
+      // create sequence string from shot as entered by coder
+      var full_sequence = shot.split('').map(function(m) {
+         return babel[m] ? babel[m] + ', ' : ''
+      }).join('');
+      full_sequence = full_sequence.length > 2 ? full_sequence.slice(0, full_sequence.length - 2) : '';
+
+      // break shot down into descriptive elements
+      var sequence;
+      var direction;
+      var stroke = shot[0];
+      if (assignments[stroke]) {
+         sequence = assgnments[stroke];
+      } else if (serves[stroke]) {
+         sequence = serves[stroke];
+         if (shot.indexOf('+') > 0) sequence += '; net approach';
+         var fault = shotFault(shot);
+         if (fault) sequence += '; ' + errors[fault];
+         var terminator = containsTerminator(shot);
+         if (terminator) {
+            if (terminator == '*') sequence += '; Ace';
+            if (terminator == '#') sequence += '; Serve Winner';
+         }
+         if (point) {
+            if (stroke == 5) {
+               direction = 2;
+            } else if (deuce_court_points.indexOf(point) >= 0) {
+               direction = 1;
+            } else if (ad_court_points.indexOf(point) >= 0) {
+               direction = 3;
+            }
+         } else {
+            direction = 0;
+         }
+      } else if (strokes[stroke]) {
+         sequence = strokes[stroke];
+         var position = shotPosition(shot);
+         if (position) sequence += ' ' + positions[position];
+         var direction = shotDirection(shot);
+         if (direction) {
+            if (direction == 1 && origin == 1 || direction == 3 && origin == 3) {
+               sequence += ' cross-court';
+            } else if (direction == 3 && origin == 1 || direction == 1 && origin == 3) {
+               sequence += ' down the line';
+            } else if (direction == 2 && origin == 2) {
+               sequence += ' down the middle';
+            } else if (direction == 2) {
+               sequence += ' to the middle';
+            } else if (direction == 3) {
+               sequence += ' to the right side';
+            } else if (direction == 1) {
+               sequence += ' to the left side';
+            }
+         }
+         var depth = shotDepth(shot);
+         var shot_depth = depth ? depths[depth] : '';
+         if (shot_depth) sequence += '; ' + shot_depth;
+
+         var fault = shotFault(shot);
+         if (fault) sequence += '; ' + errors[fault];
+         var terminator = containsTerminator(shot);
+         if (terminator) sequence += '; ' + terminators[terminator];
+      }
+
+      return { sequence: sequence, full_sequence: full_sequence, direction: direction };
+   }
+
+   function shotPosition(shot) {
+      if (!shot) return false;
+      var depths = '+-='.split('');
+      for (var d=0; d < depths.length; d++) {
+         if (shot.indexOf(depths[d]) >= 0) return depths[d];
+      }
+      return false;
+   }
+
+   function shotDepth(shot) {
+      if (!shot) return false;
+      var depths = '789'.split('');
+      for (var d=0; d < depths.length; d++) {
+         if (shot.indexOf(depths[d]) >= 0) return depths[d];
+      }
+      return false;
+   }
+
+   function shotDirection(shot) {
+      if (!shot) return false;
+      var directions = '123'.split('');
+      for (var d=0; d < directions.length; d++) {
+         if (shot.indexOf(directions[d]) >= 0) return directions[d];
+      }
+      return false;
+   }
+
+   function shotFault(shot) {
+      if (!shot) return false;
+      var faults = 'nwdxge!'.split('');
+      for (var f=0; f < faults.length; f++) {
+         if (shot.indexOf(faults[f]) >= 0) return faults[f];
+      }
+      return false;
    }
 
    function containsTerminator(shot) {
@@ -414,15 +620,6 @@ module.exports = function() {
          fodder = nextfodder;
       }
       return shots;
-   }
-
-   function shotFault(shot) {
-      if (!shot) return false;
-      var faults = 'nwdxge!'.split('');
-      for (var f=0; f < faults.length; f++) {
-         if (shot.indexOf(faults[f]) >= 0) return faults[f];
-      }
-      return false;
    }
 
    function parsePlayers(match_id) {
@@ -620,6 +817,9 @@ module.exports = function() {
          return { point: point };
       }
    }
+
+   var deuce_court_points = ['0-15', '15-0', '15-30', '30-15', '30-40', '40-30', '15-G', 'G-15'];
+   var ad_court_points = ['15-15', '0-30', '30-30', '40-40', '15-40', '40-15', 'A-40', '40-A'];
 
    mcp.localCacheList = localCacheList;
    function localCacheList() {
