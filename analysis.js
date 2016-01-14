@@ -21,8 +21,11 @@ module.exports = function() {
    function serveAnalysis(points, verbose) {
       var serve_types = {};
       var invalid_serves = 0;
+      var multiple_serves = 0;
       for (var p=0; p < points.length; p++) {
          var point = points[p];
+         if (point.serves.length > 1) multiple_serves += 1;
+         if (point.first_serve && point.first_serve.serves && point.first_serve.serves.length > 1) multiple_serves += 1;
          if (point.serves.length == 0) invalid_serves += 1;
          if (point.first_serve && point.first_serve.serves && point.first_serve.serves.length == 0) invalid_serves += 1;
          if (point.serves.length == 1) {
@@ -35,7 +38,8 @@ module.exports = function() {
       }
       var analysis = {
          serve_types: serve_types,
-         invalid_serves: invalid_serves
+         invalid_serves: invalid_serves,
+         multiple_serves: multiple_serves
       };
       return analysis
    }
@@ -44,9 +48,11 @@ module.exports = function() {
    function matchesServeAnalysis(matches, verbose) {
       var serve_types = {};
       var invalid_serves = 0;
+      var multiple_serves = 0;
       matches.forEach(function(match, i) {
          var analysis = serveAnalysis(match.match.points(), verbose);
          invalid_serves += analysis.invalid_serves;
+         multiple_serves += analysis.multiple_serves;
          var serve_keys = Object.keys(analysis.serve_types);
          serve_keys.forEach(function(s) {
             if (!serve_types[s]) {
@@ -58,7 +64,8 @@ module.exports = function() {
       });
       var matches_analysis = {
          serve_types: serve_types,
-         invalid_serves: invalid_serves
+         invalid_serves: invalid_serves,
+         multiple_serves: multiple_serves
       };
       return matches_analysis
    }
