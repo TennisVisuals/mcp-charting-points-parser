@@ -33,9 +33,9 @@ Please view the README file for details on installing the mcp-charting-points-pa
   Aces: [ 6, 4 ],
   DoubleFaults: [ 2 ] }
 ```
-**baseStats()** converts counters into Overview stats for an arbitrary collection of points.  Use the *sets* accessor on the match object to retrieve points for a single set.  
+**baseStats()** converts counters into Overview stats for an *arbitrary collection of points*.  Use the *sets* accessor on the match object to retrieve points for a single set.  
 
-Produces the same stats you will find here: http://www.tennisabstract.com/charting/20151122-M-Tour_Finals-F-Roger_Federer-Novak_Djokovic.html
+Produces the same stats you will find here: <a href = "http://www.tennisabstract.com/charting/20151122-M-Tour_Finals-F-Roger_Federer-Novak_Djokovic.html" target="_blank">http://www.tennisabstract.com/charting/20151122-M-Tour_Finals-F-Roger_Federer-Novak_Djokovic.html</a>
 ```
 > p.st.baseStats(c)
 { '0':

@@ -1,6 +1,6 @@
 # mcp-charting-points-parser
 ### Parses CSV files created by the Match Charting Project
-Uses Universal Match Object (UMO) https://github.com/TennisVisuals/universal-match-object to create navigable objects for each match found in MCP .csv files
+Uses the Universal Match Object (UMO) https://github.com/TennisVisuals/universal-match-object to create navigable objects for each match found in MCP .csv files
 
 #### Requirements:
 - Node
