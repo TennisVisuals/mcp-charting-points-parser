@@ -1,3 +1,6 @@
+// TODO
+// Add Round to Tournament information
+
 module.exports = function() {
 
    // module container
@@ -315,7 +318,7 @@ module.exports = function() {
    }
 
    function assignError(shot) {
-      var errors = {'n': 'Net', 'w': 'Out Wide', 'd': 'Out Deep', 'x': 'Out Wide and Deep', 'g': 'Foot Fault', 'e': 'Unknown', '!': 'Shank' };
+      var errors = {'n': 'Net', 'w': 'Out Wide', 'd': 'Out Long', 'x': 'Out Wide and Long', 'g': 'Foot Fault', 'e': 'Unknown', '!': 'Shank' };
       var error = shotFault(shot);
       if (error) return errors[error];
    }
@@ -406,8 +409,8 @@ module.exports = function() {
       var errors = {
          'n': 'Netted',
          'w': 'Out Wide',
-         'd': 'Out Deep',
-         'x': 'Out Wide and Deep',
+         'd': 'Out Long',
+         'x': 'Out Wide and Long',
          'g': 'Foot Fault',
          'e': 'Unknown Error',
          '!': 'Shank' 
@@ -448,9 +451,9 @@ module.exports = function() {
          '3':  'to Right Hander Backhand'
       };
       var depths = {
-         '7':  'Within Service Boxes',
-         '8':  'Past the Service Line',
-         '9':  'Close to Baseline'
+         '7':  '(shallow)',
+         '8':  '(deep)',
+         '9':  '(very deep)'
       };
       var terminators = {
          '*':  'Winner',

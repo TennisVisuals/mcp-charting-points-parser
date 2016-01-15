@@ -57,7 +57,10 @@ Each match contains tournament information as well as a UMO which can be queried
   pop: [Function],
   players: [Function],
   score: [Function],
-  reset: [Function] }
+  reset: [Function],
+  sets: [Function],
+  pointIndex: [Function],
+  findPoint: [Function] }
 ```
 You won't need most of these accessors for match analysis; review the REAME for the Universal Match Object if you are interested in learning more about the accessors not covered in these examples.  
 ```
@@ -106,6 +109,38 @@ The winner of the point would be:
 ### Analysis & Statistics
 Be sure to check out the **Analysis** and **Statistics** modules which you can read about in the documentation
 
+### Convenience
+Each match UMO can be queried to find specific points, given the set, game and score. This can be useful in debugging. Sets and Games begin at 0, so the first point of the 7th Game of the 1st Set can be accessed using the function **pointIndex(*set*, *game*)**:
+```
+> match.pointIndex(0,6)
+42
+```
+If you know the point score:
+```
+> match.pointIndex(0,6, '30-15')
+44
+```
+To search and display all point details, use **findPoint()**.
+```
+> match.findPoint(0,6,'15-0')
+{ serves: [ '4' ],
+  rally: [ 'f29', 'f3*' ],
+  terminator: '*',
+  result: 'Winner',
+  serve: 1,
+  code: '4f29f3*|',
+  winner: 0,
+  score: '15-0',
+  set: 0,
+  server: 0,
+  game: 6 }
+```
+You can use an optional final parameter to make the search 'lazy', which will search for '15-0' as well as '0-15'.
+```
+> match.findPoint(0,6,'15-0', true)
+...
+```
+
 ### Point Translation
 Several convenience functions are provided for working with MCP match data.
 
@@ -118,7 +153,7 @@ Several convenience functions are provided for working with MCP match data.
   'Backhand to the middle',
   'Backhand to the left side; Netted; Unforced Error' ]
 ```
-**decipherSequence()** provides an english-language translation of an MCP shot sequence. An optional second argument enables passing the point (e.g. '0-15') which aids in determining the trajectory of the return of service.
+**decipherSequence()** provides an english-language translation of an MCP shot sequence. An optional second argument enables passing the point score (e.g. '0-15') which aids in determining the trajectory of the return of service.
 ```
 > p.decipherSequence('6f=37b+3b3z#', '0-15')
 [ 'T Serve',
@@ -127,7 +162,7 @@ Several convenience functions are provided for working with MCP match data.
   'Backhand cross-court',
   'Backhand Volley; Forced Error' ]
 ```
-**decipherShot()** provides an english-language translation of a single MCP shot.
+**decipherShot()** provides an english-language translation of a single MCP shot. The point score is an optional parameter.
 ```
 > p.decipherShot('6*', '0-15')
 { sequence: 'T Serve; Ace',
