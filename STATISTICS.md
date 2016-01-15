@@ -9,9 +9,12 @@ Please view the README file for details on installing the mcp-charting-points-pa
 
 ```
 > p.st.counters(match.points())
-{ Serves: [ 59, 56 ],
+{ FirstServes: [ 59, 56 ],
+  SecondServes: [ 20, 18 ],
   Points: [ 53, 62 ],
+  ReturnPointsWon: [ 17, 23 ],
   UnforcedErrors: [ 27, 14 ],
+  Winners: [ 13, 9 ],
   Breakpoints: [ 2, 9 ],
   ForcedErrors: [ 18, 20 ],
   GamepointConversions: [ 7, 9 ],
