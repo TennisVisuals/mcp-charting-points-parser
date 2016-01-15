@@ -391,6 +391,8 @@ module.exports = function() {
    function decipherShot(shot, point, origin) {
       // point is needed to determine side from which serve originated
       // origin is the direction of the previous shot
+      // need to add player position from previous shot
+      // so that inside-in and inside-out can be properly calculated
      
       var assignments = {
          'S': 'Server won the point',
@@ -413,23 +415,27 @@ module.exports = function() {
          '5':  'Body Serve',
          '6':  'T Serve'
       };
-      var strokes = {
+      var forehand = {
          'f':  'Forehand',
-         'b':  'Backhand',
          'r':  'Forehand Slice',
-         's':  'Backhand Slice',
          'v':  'Forehand Volley',
-         'z':  'Backhand Volley',
          'o':  'Overhead Smash',
-         'p':  'Backhand Overhead Smash',
          'u':  'Forehand Drop Shot',
-         'y':  'Backhand Drop Shot',
          'l':  'Forehand Lob',
-         'm':  'Backhand Lob',
          'h':  'Forehand Half-volley',
+         'j':  'Forehand Drive Volley'
+      };
+      var backhand = {
+         'b':  'Backhand',
+         's':  'Backhand Slice',
+         'z':  'Backhand Volley',
+         'p':  'Backhand Overhead Smash',
+         'y':  'Backhand Drop Shot',
+         'm':  'Backhand Lob',
          'i':  'Backhand Half-volley',
-         'j':  'Forehand Drive Volley',
-         'k':  'Backhand Drive Volley',
+         'k':  'Backhand Drive Volley'
+      };
+      var other = {
          't':  'Trick Shot',
          'q':  'Unknown Shot'
       };
@@ -453,6 +459,11 @@ module.exports = function() {
          '-': 'at the Net',
          '=': 'at the Baseline'
       };
+
+      var strokes = {};
+      Object.keys(forehand).forEach(e => strokes[e] = forehand[e]);
+      Object.keys(backhand).forEach(e => strokes[e] = backhand[e]);
+      Object.keys(other).forEach(e => strokes[e] = other[e]);
 
       // create aggregate object
       var babel = {};
@@ -497,14 +508,19 @@ module.exports = function() {
          } else {
             direction = 0;
          }
+      // need to add position information as well as incoming direction
+      // (presently origin) to properly calculate inside-in and inside-out
       } else if (strokes[stroke]) {
+         var hand;
+         if (forehand[stroke]) hand = 'forehand';
+         if (backhand[stroke]) hand = 'backhand';
          sequence = strokes[stroke];
          var position = shotPosition(shot);
          if (position) sequence += ' ' + positions[position];
          var direction = shotDirection(shot);
          if (direction) {
             if (direction == 1 && origin == 1 || direction == 3 && origin == 3) {
-               sequence += ' cross-court';
+               sequence += ' crosscourt';
             } else if (direction == 3 && origin == 1 || direction == 1 && origin == 3) {
                sequence += ' down the line';
             } else if (direction == 2 && origin == 2) {
