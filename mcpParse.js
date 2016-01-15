@@ -372,25 +372,28 @@ module.exports = function() {
       var description = [];;
       var shots = shotSplitter(sequence);
       var origin = 0;
+      var incoming_direction = 0;
       if (point) {
          if (deuce_court_points.indexOf(point) >= 0) {
             origin = 1;
+            incoming_direction = 1;
          } else if (ad_court_points.indexOf(point) >= 0) {
             origin = 3;
+            incoming_direction = 3;
          }
       }
       shots.forEach(function(shot) {
-         var analysis = decipherShot(shot, point, origin);
+         var analysis = decipherShot(shot, point, incoming_direction, origin);
          description.push(analysis.sequence);
-         origin = analysis.direction;
+         incoming_direction = analysis.direction;
       });
       return description;
    }
 
    mcp.decipherShot = decipherShot;
-   function decipherShot(shot, point, origin) {
+   function decipherShot(shot, point, incoming_direction, origin) {
       // point is needed to determine side from which serve originated
-      // origin is the direction of the previous shot
+      // incoming_direction is the direction of the previous shot
       // need to add player position from previous shot
       // so that inside-in and inside-out can be properly calculated
      
@@ -509,7 +512,6 @@ module.exports = function() {
             direction = 0;
          }
       // need to add position information as well as incoming direction
-      // (presently origin) to properly calculate inside-in and inside-out
       } else if (strokes[stroke]) {
          var hand;
          if (forehand[stroke]) hand = 'forehand';
@@ -519,11 +521,11 @@ module.exports = function() {
          if (position) sequence += ' ' + positions[position];
          var direction = shotDirection(shot);
          if (direction) {
-            if (direction == 1 && origin == 1 || direction == 3 && origin == 3) {
+            if (direction == 1 && incoming_direction == 1 || direction == 3 && incoming_direction == 3) {
                sequence += ' crosscourt';
-            } else if (direction == 3 && origin == 1 || direction == 1 && origin == 3) {
+            } else if (direction == 3 && incoming_direction == 1 || direction == 1 && incoming_direction == 3) {
                sequence += ' down the line';
-            } else if (direction == 2 && origin == 2) {
+            } else if (direction == 2 && incoming_direction == 2) {
                sequence += ' down the middle';
             } else if (direction == 2) {
                sequence += ' to the middle';
