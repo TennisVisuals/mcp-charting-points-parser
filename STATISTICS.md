@@ -5,7 +5,7 @@ The statistics package is a work in progress.
 
 Please view the README file for details on installing the mcp-charting-points-parser.  These notes assume familiarity.
 
-**counters()** reduces the raw data into numbers from which statistics can be calculated.
+**counters()** reduces raw point data into numbers from which statistics can be calculated.
 
 ```
 > p.st.counters(match.points())
