@@ -58,9 +58,9 @@ module.exports = function() {
                  point.result != 'Forced Error') ||
                 (point.rally.length > 1)) ) {
                    if (point.first_serve) {
-                      increment('RIP2nd', 1 - point.server);
+                      increment('ReturnsInPlay2nd', 1 - point.server);
                    } else {
-                      increment('RIP1st', 1 - point.server);
+                      increment('ReturnsInPlay1st', 1 - point.server);
                    }
          }
 
@@ -117,8 +117,8 @@ module.exports = function() {
          var double_faults         = validValue(c.DoubleFaults, p);
          ps[p].UnforcedErrors      = unforced_errors + double_faults;
 
-         var rip_1st               = validValue(c.RIP1st, p);
-         var rip_2nd               = validValue(c.RIP2nd, p);
+         var rip_1st               = validValue(c.ReturnsInPlay1st, p);
+         var rip_2nd               = validValue(c.ReturnsInPlay2nd, p);
          var opp_total_serves      = validValue(c.FirstServes, 1 - p);
          var opp_2nd_serves        = validValue(c.SecondServes, 1 - p);
          var opp_double_faults     = validValue(c.DoubleFaults, 1 - p);
