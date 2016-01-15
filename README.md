@@ -67,7 +67,7 @@ You won't need most of these accessors for match analysis; review the REAME for 
 > match.score().match_score
 '6-3, 6-4'
 
-> p.matches[0].match.score().winner
+> match.score().winner
 'Novak Djokovic'
 
 > match.points()
