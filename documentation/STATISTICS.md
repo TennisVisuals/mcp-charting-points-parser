@@ -67,7 +67,7 @@ Produces the same stats you will find here: http://www.tennisabstract.com/charti
 > fsc = s.counters(first_set.points())
 ...
 
-> p.st.baseStats(fsc)
+> s.baseStats(fsc)
 { '0':
    { AcePct: '3.33',
      DFPct: '3.33',

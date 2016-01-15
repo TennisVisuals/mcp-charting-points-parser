@@ -13,7 +13,9 @@ Please view the README file for details on installing the mcp-charting-points-pa
 
 ```
 > djoker = a.playerMatches(p.matches, 'Djokovic')
+...
 > NDvRF = a.playerMatches(djoker, 'Federer')
+...
 ```
 
 **rallyDepth()** counts the number of points in a match which have a return of service, and differentiates returns which finish a point and returns which include an indication of the depth of the return. In the example below there are three "return-other" shots; these are returns of service which have no depth information and do not finish the point.
@@ -50,7 +52,8 @@ Of all MCP women's matches, 31 have a total of 33 rally shots with depth informa
      '6n': 1,
      '4#': 1,
      '5d': 1 },
-  invalid_serves: 0 }
+  invalid_serves: 0,
+  multiple_serves: 0 }
 ```
 **matchesServeAnalysis()** runs **serveAnalysis** for an array of matches and gives an aggregate result.
 
@@ -59,6 +62,7 @@ According to the MCP data, the most common serve for women is a 'Body' serve, wh
 There have been 538 invalid serves coded for women's matches (1.41/match) and 983 invalid serves coded for men's matches (1.14/match). Multiple serves are sometimes coded as part of the same shot sequence; this happened 6 times for men's matches.
 ```
 > a.matchesServeAnalysis(p.matches)
+...
 ```
 ### Strange Encounters
 
