@@ -70,8 +70,8 @@ You won't need most of these accessors for match analysis; review the REAME for 
 > match.score().winner
 'Novak Djokovic'
 
-> match.points()
-...
+> match.points().length
+115
 ```
 
 A single point looks like this:
