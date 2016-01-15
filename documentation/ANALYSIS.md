@@ -5,10 +5,22 @@ Analysis functions are a work in progress. These function are provided as templa
 
 Please view the README file for details on installing the mcp-charting-points-parser.  These notes assume familiarity.
 
+```
+> a = p.analysis
+```
+
+**playerMatches()** returns an array of all matches containing the specified player.  Call the function a second time to create an array of matches between two players.
+
+```
+> djoker = a.playerMatches(p.matches, 'Djokovic')
+> NDvRF = a.playerMatches(djoker, 'Federer')
+```
+
 **rallyDepth()** counts the number of points in a match which have a return of service, and differentiates returns which finish a point and returns which include an indication of the depth of the return. In the example below there are three "return-other" shots; these are returns of service which have no depth information and do not finish the point.
 
 ```
-> p.az.rallyDepth(match.points())
+
+> a.rallyDepth(match.points())
 { points: 115,
   returns: 101,
   return_finish: 22,
@@ -22,12 +34,12 @@ Please view the README file for details on installing the mcp-charting-points-pa
 Of all MCP women's matches, 31 have a total of 33 rally shots with depth information (but 9 of these are due to an invalid serve code pushing return-of-service to the second rally shot). Of all MCP men's matches, 35 have a total of 177 rally shots with depth information (but 12 of these are due to an invalid serve code pushing return-of-service to the second rally shot).
 
 ```
-> p.az.matchesWithRallyDepth(p.matches)
+> a.matchesWithRallyDepth(p.matches)
 { rally_shots: 1640, rally_depth: 0, matches: [] }
 ```
 **serveAnalysis()** counts the number of different types of serves charted for a given match while noting instances of invalid serve codes and cases where more than one serve were entered in the same shot sequence.
 ```
-> p.az.serveAnalysis(match.points())
+> a.serveAnalysis(match.points())
 { serve_types:
    { '4': 44,
      '5': 17,
@@ -46,7 +58,7 @@ According to the MCP data, the most common serve for women is a 'Body' serve, wh
 
 There have been 538 invalid serves coded for women's matches (1.41/match) and 983 invalid serves coded for men's matches (1.14/match). Multiple serves are sometimes coded as part of the same shot sequence; this happened 6 times for men's matches.
 ```
-> p.az.matchesServeAnalysis(p.matches)
+> a.matchesServeAnalysis(p.matches)
 ```
 ### Strange Encounters
 

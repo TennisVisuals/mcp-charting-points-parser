@@ -18,8 +18,8 @@ module.exports = function() {
    var ProgressBar    = require('progress');
 
    var mo             = require('./matchObject');
-   mcp.az             = require('./analysis')();
-   mcp.st             = require('./statistics')();
+   mcp.analysis       = require('./analysis')();
+   mcp.statistics     = require('./statistics')();
 
    mcp.mcpCSVparser = mcpCSVparser;
    function mcpCSVparser (file_name, cache_directory) {

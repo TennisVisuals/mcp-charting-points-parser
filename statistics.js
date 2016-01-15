@@ -101,6 +101,14 @@ module.exports = function() {
 
    }
 
+   statistics.serveStats = serveStats;
+   function serveStats(c) {
+      var player_stats = { 0: {}, 1: {} };
+      for (var p=0; p < 2; p++) {
+      }
+      return player_stats;
+   }
+
    // temporary workaround until universal method contrived
    function finalShotHand(point) {
       if (!point) return undefined;

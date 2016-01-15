@@ -103,15 +103,12 @@ The winner of the point would be:
 > players[point.winner]
 'Novak Djokovic'
 ```
-### Convenience
-Several convenience function are provided for working with the match data
+### Analysis & Statistics
+Be sure to check out the **Analysis** and **Statistics** modules which you can read about in the documentation
 
-**playerMatches()** returns an array of all matches containing the specified player.  Call the function a second time to create an array of matches between two players.
+### Point Translation
+Several convenience functions are provided for working with MCP match data.
 
-```
-> dj = p.az.playerMatches(p.matches, 'Djokovic')
-> djVrf = p.az.playerMatches(dj, 'Federer')
-```
 **decipherPoint()** provides an english-language translation of a point.
 ```
 > p.decipherPoint(point)
