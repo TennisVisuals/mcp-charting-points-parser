@@ -89,7 +89,7 @@ A single point looks like this:
   first_serve: { serves: [ '4n' ], error: 'Net' },
   code: '4n|6b19f3b2b1n@',
   winner: 1,
-  point: '0-15',
+  score: '0-15',
   server: 0,
   game: 0 }
 ```
