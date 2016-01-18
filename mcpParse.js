@@ -1,5 +1,7 @@
 // TODO
 // Add Round to Tournament information
+//
+// finish combineMatchesPoints
 
 module.exports = function() {
 
@@ -359,7 +361,6 @@ module.exports = function() {
       if (result) analysis.result = result;
       if (ignored_shots && ignored_shots.length) analysis.ignored = ignored_shots;
 
-      //var analysis = { serves: serves, rally: rally, lets: lets, terminator: terminator, result: result, ignored: ignored_shots };
       return analysis
    }
 
@@ -587,6 +588,15 @@ module.exports = function() {
       return false;
    }
 
+   function shotType(shot) {
+      if (!shot) return false;
+      var shot_types = '0456fbrsvzopuylmhijktq'.split('');
+      for (var f=0; f < shot_types.length; f++) {
+         if (shot.indexOf(shot_types[f]) >= 0) return shot_types[f];
+      }
+      return false;
+   }
+
    function containsTerminator(shot) {
       if (!shot) return false;
       var terminators = ['#', '@', '*'];
@@ -609,6 +619,7 @@ module.exports = function() {
       return serves;
    }
 
+   mcp.shotSplitter = shotSplitter;
    function shotSplitter(point) {
       var strokes = '0456fbrsvzopuylmhijktq';
       var stroke_array = strokes.split('');
@@ -841,6 +852,63 @@ module.exports = function() {
 
    var deuce_court_points = ['0-15', '15-0', '15-30', '30-15', '30-40', '40-30', '15-G', 'G-15'];
    var ad_court_points = ['15-15', '0-30', '30-30', '40-40', '15-40', '40-15', 'A-40', '40-A'];
+
+   mcp.playerMatches = playerMatches;
+   function playerMatches(match_array, player_name) {
+      var matches = [];
+      match_array.forEach(function(match) {
+         var players = match.match.players();
+         if (players[0].search(player_name) >= 0 || players[1].search(player_name) >= 0) {
+            matches.push(match);
+         }
+      });
+      return matches;
+   }
+
+   // facilitate aggregate stats across a number of matches
+   mcp.combineMatchesPoints = combineMatchesPoints;
+   function combineMatchesPoints (matches) {
+      // Array.array.prototype.concat
+   }
+
+   // shot pattern is an array of shots
+   mcp.findShotPattern = findShotPattern;
+   function findShotPattern(points, shot_pattern, reverse) {
+      var matched_points = [];
+      for (var p=0; p < points.length; p++) {
+         var point = points[p];
+         var point_shots = [];
+
+         // take only the last shot in case mulptiple were coded
+         if (point.serves) point_shots.push(point.serves[point.serves.length - 1]);
+         if (point.rally && point.rally.length) point.rally.forEach(e => point_shots.push(e));
+
+         // saearch pattern is greater than # of shots in point
+         if (shot_pattern.length > point_shots.length) continue;
+
+         var fail = false;
+         for (var s=0; s < shot_pattern.length; s++) {
+            var shot_index = reverse ? point_shots.length - 1 - s : s;
+            var pattern_index = reverse ? shot_pattern.length - 1 - s : s;
+            var shot = point_shots[shot_index];
+            var pattern = shot_pattern[pattern_index];
+            if (!equalShots(shot, pattern)) fail = true;
+         }
+         if (!fail) matched_points.push(point);
+      }
+      return matched_points;
+
+      function equalShots(shot, pattern) {
+         var equal = true;
+         if (shotType(pattern) && shotType(shot) != shotType(pattern)) equal = false;
+         if (containsTerminator(pattern) && containsTerminator(shot) != containsTerminator(pattern)) equal = false;
+         if (shotDirection(pattern) && shotDirection(shot) != shotDirection(pattern)) equal = false;
+         if (shotDepth(pattern) && shotDepth(shot) != shotDepth(pattern)) equal = false;
+         if (shotPosition(pattern) && shotPosition(shot) != shotPosition(pattern)) equal = false;
+         if (shotFault(pattern) && shotFault(shot) != shotFault(pattern)) equal = false;
+         return equal;
+      }
+   }
 
    mcp.localCacheList = localCacheList;
    function localCacheList() {

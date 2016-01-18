@@ -3,6 +3,46 @@ module.exports = function() {
    // module container
    var statistics = {};
 
+   statistics.selectPoints = selectPoints;
+   function selectPoints(points, selection) {
+      if (!selection) return points;
+      var selected_points = [];
+
+      var score_groupings = {};
+      score_groupings['Deuce Court'] = ['0-15', '15-0', '15-30', '30-15', '30-40', '40-30', '15-G', 'G-15'];
+      score_groupings['Ad Court']    = ['15-15', '0-30', '30-30', '40-40', '15-40', '40-15', 'A-40', '40-A'];
+
+      // overload score_selection to accept either arrays of scores or predefined named array of scores
+      if (selection.scores) {
+         if (typeof selection.scores == 'string' && Object.keys(score_groupings).indexOf(selection.scores) >= 0) {
+            var score_selection = score_groupings[selection.scores];
+         } else {
+            var score_selection = selection.scores;
+         }
+      }
+
+      var selection_keys = (typeof selection == 'object') ? Object.keys(selection) : undefined;
+
+      for (var p=0; p < points.length; p++) {
+         var point = points[p];
+
+         if (score_selection && score_selection.indexOf(point.score) < 0) continue;
+
+         if (selection.server != undefined     && point.server != selection.server) continue;
+         if (selection.breakpoint != undefined && point.breakpoint != selection.breakpoint) continue;
+         if (selection.gamepoint != undefined  && point.gamepoint != selection.gamepoint) continue;
+         if (selection.game != undefined       && point.game != selection.game) continue;
+         if (selection.set != undefined        && point.set != selection.set) continue;
+         if (selection.winner != undefined     && point.winner != selection.winner) continue;
+         if (selection.result != undefined     && point.result != selection.result) continue;
+         if (selection.error != undefined      && point.error != selection.error) continue;
+         if (selection.score != undefined      && point.score != selection.score) continue;
+
+         selected_points.push(points[p]);
+      }
+      return selected_points;
+   }
+
    statistics.counters = counters;
    function counters(points) {
       var stat_obj = {};
@@ -10,53 +50,67 @@ module.exports = function() {
          var point = points[p];
          var hand  = finalShotHand(point);
          var serve_directions = serveDirections(point);
+         var serve_outcomes = serveOutcomes(point);
 
-         increment('FirstServes', point.server);
-         if (point.first_serve) increment('SecondServes', point.server);
+         increment('ServedPoints', point.server);
+         if (point.first_serve) increment('Serves2nd', point.server);
 
-         if (!point.first_serve) {
-            if (serve_directions.first  == 'Wide') increment('FirstServesWide',  point.server);
-            if (serve_directions.first  == 'Body') increment('FirstServesBody',  point.server);
-            if (serve_directions.first  == 'T')    increment('FirstServesT',     point.server);
-         } else {
-            if (serve_directions.second == 'Wide') increment('SecondServesWide', point.server);
-            if (serve_directions.second == 'Body') increment('SecondServesBody', point.server);
-            if (serve_directions.second == 'T')    increment('SecondServesT',    point.server);
-         }
+         increment('PointsWon', point.winner);
+         if (point.server == point.winner) increment('PointsWonServes', point.server);
+         if (point.server == point.winner && !point.first_serve) increment('PointsWonServes1st', point.server);
+         if (point.server == point.winner &&  point.first_serve) increment('PointsWonServes2nd', point.server);
 
-         increment('Points', point.winner);
-         if (point.server == point.winner) increment('ServePointsWon', point.server);
-         if (point.server == point.winner && !point.first_serve) increment('ServePointsWon1st', point.server);
-         if (point.server == point.winner &&  point.first_serve) increment('ServePointsWon2nd', point.server);
+         if (point.server == point.winner && (!point.rally || (point.rally && point.rally.length <= 2))) increment('PointsWonServe3Rally', point.server);
 
-         if (point.server != point.winner) increment('ReturnPointsWon', 1 - point.server);
-         if (point.server != point.winner && !point.first_serve) increment('ReturnPointsWon1st', 1 - point.server);
-         if (point.server != point.winner &&  point.first_serve) increment('ReturnPointsWon2nd', 1 - point.server);
+         if (point.server != point.winner) increment('PointsWonReturn', 1 - point.server);
+         if (point.server != point.winner && !point.first_serve) increment('PointsWonReturn1st', 1 - point.server);
+         if (point.server != point.winner &&  point.first_serve) increment('PointsWonReturn2nd', 1 - point.server);
 
-         if (point.server == point.winner && !point.first_serve) increment('PointsWon1stServe', point.server);
-         if (point.server == point.winner &&  point.first_serve) increment('PointsWon2ndServe', point.server);
-
-         if (point.result == 'Ace') increment('Aces', point.server);
+         if (point.result == 'Ace') increment('ServesAce', point.server);
          if (point.result == 'Serve Winner') increment('ServeWinners', point.server);
          if (point.result == 'Double Fault') increment('DoubleFaults', point.server);
 
+         if (point.result == 'Forced Error' && point.rally && point.rally.length == 1) increment('ServeForcedErrors', point.server);
+
          if (point.result == 'Winner') increment('Winners', point.winner);
-         if (point.result == 'Winner' && hand == 'Forehand') increment('ForehandWinners', point.winner);
-         if (point.result == 'Winner' && hand == 'Backhand') increment('BackhandWinners', point.winner);
+         if (point.result == 'Winner' && hand == 'Forehand') increment('WinnersForehand', point.winner);
+         if (point.result == 'Winner' && hand == 'Backhand') increment('WinnersBackhand', point.winner);
 
          if (point.result == 'Forced Error') increment('ForcedErrors', 1 - point.winner);
-         if (point.result == 'Forced Error' && hand == 'Forehand')   increment('ForehandForcedErrors', 1 - point.winner);
-         if (point.result == 'Forced Error' && hand == 'Backhand')   increment('BackhandForcedErrors', 1 - point.winner);
+         if (point.result == 'Forced Error' && hand == 'Forehand')   increment('ForcedErrorsForehand', 1 - point.winner);
+         if (point.result == 'Forced Error' && hand == 'Backhand')   increment('ForcedErrorsBackhand', 1 - point.winner);
 
          if (point.result == 'Unforced Error') increment('UnforcedErrors', 1 - point.winner);
-         if (point.result == 'Unforced Error' && hand == 'Forehand') increment('ForehandUnforcedErrors', 1 - point.winner);
-         if (point.result == 'Unforced Error' && hand == 'Backhand') increment('BackhandUnforcedErrors', 1 - point.winner);
+         if (point.result == 'Unforced Error' && hand == 'Forehand') increment('UnforcedErrorsForehand', 1 - point.winner);
+         if (point.result == 'Unforced Error' && hand == 'Backhand') increment('UnforcedErrorsBackhand', 1 - point.winner);
+
+         if (!point.first_serve) {
+            if (serve_directions.first  == 'Wide') increment('ServesWide1st',  point.server);
+            if (serve_directions.first  == 'Body') increment('ServesBody1st',  point.server);
+            if (serve_directions.first  == 'T')    increment('ServesT1st',     point.server);
+
+            if (point.result == 'Ace') increment('ServesAce1st', point.server);
+            if (point.result == 'Serve Winner') increment('ServeWinners1st', point.server);
+            if (point.result == 'Forced Error' && point.rally && point.rally.length == 1) increment('ServeForcedErrors1st', point.server);
+            if (point.server == point.winner && (!point.rally || (point.rally && point.rally.length <= 2))) increment('PointsWonServe3Rally1st', point.server);
+
+         } else {
+            if (serve_directions.second == 'Wide') increment('ServesWide2nd', point.server);
+            if (serve_directions.second == 'Body') increment('ServesBody2nd', point.server);
+            if (serve_directions.second == 'T')    increment('ServesT2nd',    point.server);
+
+            if (point.result == 'Ace') increment('ServesAce2nd', point.server);
+            if (point.result == 'Serve Winner') increment('ServeWinners2nd', point.server);
+            if (point.result == 'Forced Error' && point.rally && point.rally.length == 1) increment('ServeForcedErrors2nd', point.server);
+            if (point.server == point.winner && (!point.rally || (point.rally && point.rally.length <= 2))) increment('PointsWonServe3Rally2nd', point.server);
+         }
 
          if ( point.rally && point.rally.length && 
                ((point.rally.length == 1 && 
                  point.result != 'Unforced Error' && 
                  point.result != 'Forced Error') ||
                 (point.rally.length > 1)) ) {
+                   increment('ReturnsInPlay', 1 - point.server);
                    if (point.first_serve) {
                       increment('ReturnsInPlay2nd', 1 - point.server);
                    } else {
@@ -65,9 +119,10 @@ module.exports = function() {
          }
 
          if (point.breakpoint != undefined) increment('Breakpoints', point.breakpoint);
-         if (point.point.indexOf('G') >= 0 && point.winner != point.server) increment('BreakpointConversions', 1 - point.server);
-         if (point.point.indexOf('G') >= 0 && point.winner == point.server) increment('GamepointConversions', point.server);
-         if (point.point.indexOf('G') >= 0) increment('Games', point.winner);
+         if (point.gamepoint != undefined)  increment('Gamepoints', point.gamepoint);
+         if (point.score.indexOf('G') >= 0 && point.winner != point.server) increment('BreakpointsConverted', 1 - point.server);
+         if (point.score.indexOf('G') >= 0 && point.winner == point.server) increment('GamepointsConverted', point.server);
+         if (point.score.indexOf('G') >= 0) increment('Games', point.winner);
       }
       return stat_obj;
 
@@ -90,70 +145,124 @@ module.exports = function() {
       var ps = { 0: {}, 1: {} };
       for (var p=0; p < 2; p++) {
 
-         ps[p].PctFirstServe       = (c.FirstServes && c.SecondServes) ?
-                                     cpct(c.FirstServes[p] - c.SecondServes[p], c.FirstServes[p]) : 
-                                     undefined;
+         var total_service          = validValue(c.ServedPoints, p);
+         var second_serves          = validValue(c.Serves2nd, p);
+         var first_serves           = total_service - second_serves;
 
-         ps[p].PctPointsWon1st     = (c.PointsWon1stServe && c.FirstServes) ?
-                                     cpct(c.PointsWon1stServe[p], c.FirstServes[p] - c.SecondServes[p]) : 
-                                     undefined;
+         var opp_total_service      = validValue(c.ServedPoints, 1 - p);
+         var opp_2nd_serves         = validValue(c.Serves2nd, 1 - p);
 
-         ps[p].PctAces             = validPct(c.Aces, c.FirstServes, p);
-         ps[p].PctDoubleFaults     = validPct(c.DoubleFaults, c.FirstServes, p);
-         ps[p].PctPointsWon2nd     = validPct(c.PointsWon2ndServe, c.SecondServes, p);
-         ps[p].PctReturnPointsWon  = validPct(c.ReturnPointsWon, c.FirstServes, p, 1 - p);
+         var combined_total_service = total_service + opp_total_service;
 
-         var opp_breakpoints       = validValue(c.Breakpoints, 1 - p);
-         var opp_bpt_conv          = validValue(c.BreakpointConversions, 1 - p);
-         ps[p].BreakpointsSaved    = opp_breakpoints - opp_bpt_conv;
-         ps[p].BreakpointsFaced    = opp_breakpoints;
+         ps[p].PctPointsWon         = cpct(validValue(c.PointsWon, p), combined_total_service);
+         ps[p].PctServe1stIn        = cpct(first_serves, total_service);
 
-         var winners               = validValue(c.Winners, p);
-         var aces                  = validValue(c.Aces, p);
-         var serve_winners         = validValue(c.ServeWinners, p);
-         ps[p].Winners             = winners + aces + serve_winners;
+         ps[p].PctPointsWon1st      = cpct(validValue(c.PointsWonServes1st, p), first_serves);
 
-         var unforced_errors       = validValue(c.UnforcedErrors, p);
-         var double_faults         = validValue(c.DoubleFaults, p);
-         ps[p].UnforcedErrors      = unforced_errors + double_faults;
+         ps[p].PctAces              = validPct(c.ServesAce, c.ServedPoints, p);
+         ps[p].PctDoubleFaults      = validPct(c.DoubleFaults, c.ServedPoints, p);
+         ps[p].PctPointsWon2nd      = validPct(c.PointsWonServes2nd, c.Serves2nd, p);
+         ps[p].PctPointsWonReturn   = validPct(c.PointsWonReturn, c.ServedPoints, p, 1 - p);
 
-         var rip_1st               = validValue(c.ReturnsInPlay1st, p);
-         var rip_2nd               = validValue(c.ReturnsInPlay2nd, p);
-         var opp_total_serves      = validValue(c.FirstServes, 1 - p);
-         var opp_2nd_serves        = validValue(c.SecondServes, 1 - p);
-         var opp_double_faults     = validValue(c.DoubleFaults, 1 - p);
-         var opp_2nd_serves_in     = opp_2nd_serves - opp_double_faults;
-         var opp_1st_serves_in     = opp_total_serves - opp_2nd_serves;
-         ps[p].PctReturnsInPlay    = cpct(rip_1st + rip_2nd, opp_1st_serves_in + opp_2nd_serves_in);
-         ps[p].PctReturnsInPlay1st = cpct(rip_1st, opp_1st_serves_in);
-         ps[p].PctReturnsInPlay2nd = cpct(rip_2nd, opp_2nd_serves_in);
+         var opp_breakpoints        = validValue(c.Breakpoints, 1 - p);
+         var opp_bpt_conv           = validValue(c.BreakpointsConverted, 1 - p);
+         ps[p].BreakpointsSaved     = opp_breakpoints - opp_bpt_conv;
+         ps[p].BreakpointsFaced     = opp_breakpoints;
 
-         function validValue(value, player) { 
-            return value ? value[player] ? value[player] : 0 : 0; 
-         }
+         var winners                = validValue(c.Winners, p);
+         var aces                   = validValue(c.ServesAce, p);
+         var serve_winners          = validValue(c.ServeWinners, p);
+         ps[p].Winners              = winners + aces + serve_winners;
 
-         function validPct(value1, value2, player1, player2) {
-            return (value1 && value2) ? 
-                   cpct(value1[player1], value2[player2 != undefined ? player2 : player1]) : 
-                   undefined;
-         }
+         var unforced_errors        = validValue(c.UnforcedErrors, p);
+         var double_faults          = validValue(c.DoubleFaults, p);
+         ps[p].UnforcedErrors       = unforced_errors + double_faults;
 
+         var rip_1st                = validValue(c.ReturnsInPlay1st, p);
+         var rip_2nd                = validValue(c.ReturnsInPlay2nd, p);
+         var opp_double_faults      = validValue(c.DoubleFaults, 1 - p);
+         var opp_2nd_serves_in      = opp_2nd_serves - opp_double_faults;
+         var opp_1st_serves_in      = opp_total_service - opp_2nd_serves;
+         ps[p].PctReturnsInPlay     = cpct(rip_1st + rip_2nd, opp_1st_serves_in + opp_2nd_serves_in);
+         ps[p].PctReturnsInPlay1st  = cpct(rip_1st, opp_1st_serves_in);
+         ps[p].PctReturnsInPlay2nd  = cpct(rip_2nd, opp_2nd_serves_in);
       }
       return ps;
-
-      function cpct(count, total) { 
-         if (!total || !count) return 0;
-         return (count / total * 100).toFixed(2); 
-      }
-
    }
 
    statistics.serveStats = serveStats;
    function serveStats(c) {
-      var player_stats = { 0: {}, 1: {} };
+      var ps = { 0: {}, 1: {} };
       for (var p=0; p < 2; p++) {
+
+         // Serve Basics
+         
+         ps[p].PctServePointsWon    = validPct(c.PointsWonServes, c.ServedPoints, p);
+
+         var total_service          = validValue(c.ServedPoints, p);
+         var second_serves          = validValue(c.Serves2nd, p);
+         var first_serves           = total_service - second_serves;
+
+         ps[p].PctServeAce          = cpct(validValue(c.ServesAce, p),    total_service);
+         ps[p].PctServeAce1st       = cpct(validValue(c.ServesAce1st, p), first_serves);
+         ps[p].PctServeAce2nd       = cpct(validValue(c.ServesAce2nd, p), second_serves);
+
+         ps[p].PctServeWinners      = cpct(validValue(c.ServeWinners, p), total_service);
+         ps[p].PctServeWinners1st   = cpct(validValue(c.ServeWinners1st, p), first_serves);
+         ps[p].PctServeWinners2nd   = cpct(validValue(c.ServeWinners2nd, p), second_serves);
+
+         ps[p].PctServeForcedErrors    = cpct(validValue(c.ServeForcedErrors, p), total_service);
+         ps[p].PctServeForcedErrors1st = cpct(validValue(c.ServeForcedErrors1st, p), first_serves);
+         ps[p].PctServeForcedErrors2nd = cpct(validValue(c.ServeForcedErrors2nd, p), second_serves);
+
+         ps[p].PctServeWon3Rally    = cpct(validValue(c.PointsWonServe3Rally, p), total_service);
+         ps[p].PctServeWon3Rally1st = cpct(validValue(c.PointsWonServe3Rally1st, p), first_serves);
+         ps[p].PctServeWon3Rally2nd = cpct(validValue(c.PointsWonServe3Rally2nd, p), second_serves);
+
+         var serves_wide_1st        = validValue(c.ServesWide1st, p);
+         var serves_wide_2nd        = validValue(c.ServesWide2nd, p);
+         var serves_wide            = serves_wide_1st + serves_wide_2nd;
+
+         ps[p].PctServeWide         = cpct(serves_wide, total_service);
+         ps[p].PctServeWide1st      = cpct(serves_wide_1st, first_serves);
+         ps[p].PctServeWide2nd      = cpct(serves_wide_2nd, second_serves);
+
+         var serves_body_1st        = validValue(c.ServesBody1st, p);
+         var serves_body_2nd        = validValue(c.ServesBody2nd, p);
+         var serves_body            = serves_body_1st + serves_body_2nd;
+
+         ps[p].PctServeBody         = cpct(serves_body, total_service);
+         ps[p].PctServeBody1st      = cpct(serves_body_1st, first_serves);
+         ps[p].PctServeBody2nd      = cpct(serves_body_2nd, second_serves);
+
+         var serves_t_1st           = validValue(c.ServesT1st, p);
+         var serves_t_2nd           = validValue(c.ServesT2nd, p);
+         var serves_t               = serves_t_1st + serves_t_2nd;
+
+         ps[p].PctServeT            = cpct(serves_t, total_service);
+         ps[p].PctServeT1st         = cpct(serves_t_1st, first_serves);
+         ps[p].PctServeT2nd         = cpct(serves_t_2nd, second_serves);
+
+         // Direction
+         
+
       }
-      return player_stats;
+      return ps;
+   }
+
+   function validValue(value, player) { 
+      return value ? value[player] ? value[player] : 0 : 0; 
+   }
+
+   function validPct(value1, value2, player1, player2) {
+      return (value1 && value2) ? 
+             cpct(value1[player1], value2[player2 != undefined ? player2 : player1]) : 
+             undefined;
+   }
+
+   function cpct(count, total) { 
+      if (!total || !count) return 0;
+      return (count / total * 100).toFixed(2); 
    }
 
    // temporary workaround until universal method contrived
@@ -209,6 +318,9 @@ module.exports = function() {
          }
          return 0;
       }
+   }
+
+   function serveOutcomes(point) {
    }
 
    return statistics;

@@ -1,3 +1,6 @@
+// TODO
+// Add setpoint and matchpoint to checkBreakpoint
+
 if (!Array.prototype.last) { Array.prototype.last = function() { return this[this.length - 1]; }; }
 
 !function() { 
@@ -383,7 +386,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                game = { score: [0, 0] };
             }
 
-            return { score: score, point: point, legend: legend, leader: leader, games: game.score, tiebreak: tiebreak, complete: complete };
+            return { score: score, point: score, legend: legend, leader: leader, games: game.score, tiebreak: tiebreak, complete: complete };
           }
 
           var get_key = function(d) { return d && d.key; };
@@ -399,22 +402,23 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
              return tiebreak ? true : false;
           }
 
-          function determineWinner(point) {
+          function determineWinner(score) {
              var last_score = points.length ? points[points.length - 1].score : '0-0';
              last_score = last_score.indexOf('G') >= 0 ? '0-0' : last_score;
-             if (point.indexOf('T') >= 0) {
-                var ctv = validTiebreakScoreValue(point);
+             if (score.indexOf('T') >= 0) {
+                var ctv = validTiebreakScoreValue(score);
                 // winner is the score that equals 1
                 if (ctv && last_score == '0-0') return ctv[0] == 1 ? 0 : 1;
                 var last_ctv = validTiebreakScoreValue(last_score);
                 // winner is whichever score has changed
                 return ctv[0] != last_ctv[0] ? 0 : 1;
              } else {
-                return progression[last_score].indexOf(point);
+                return progression[last_score].indexOf(score);
              }
           }
 
-          function determinePoint(winner) {
+          // determin the point score based on previous score and point winner
+          function determineScore(winner) {
              var last_score = points.length ? points[points.length - 1].score : '0-0';
              last_score = last_score.indexOf('G') >= 0 ? '0-0' : last_score;
              var games = points.length ? points.map(function(m) { return m.score.indexOf('G') >= 0 ? 1 : 0; }).reduce(function(a, b){return a+b;}) : 0;
@@ -457,46 +461,45 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           }
 
           function pushRow(value) {
-             // legacy
-             if (typeof value == 'object' && value.point && !value.score) value.score = value.point;
-
              if (player_data[0].length && (player_data[0].last().pts == 0 || player_data[1].last().pts == 0)) {
                 // set has been completed
                 return { result: false, status: 'eos' };
              }
 
-             if (['0', '1', 'S', 'A', 'D', 'R'].indexOf(String(value)) >= 0 ) {
-                var server = nextService();
+             var player;
+             var point = { set: options.id };
+             var server = nextService();
 
-                if (['S', 'A'].indexOf(value) >= 0) { value = server; }
-                if (['D', 'R'].indexOf(value) >= 0) { value = 1 - server; }
+             if ('01SAQDRP'.split('').indexOf(String(value)) >= 0 ) {
 
-                var point = determinePoint(value);
-                var row = { winner: parseInt(value), point: point, set: options.id };
-                points.push(row);
-                return { result: true, point: row };
+                if (['S', 'A', 'Q'].indexOf(value) >= 0) { player = server; }
+                if (['D', 'R', 'P'].indexOf(value) >= 0) { player = 1 - server; }
+                if (['Q', 'P'].indexOf(value) >= 0) { point.result = 'Penalty'; }
+                if (value == 'A') point.result = 'Ace';
+                if (value == 'D') point.result = 'Double Fault';
+
+                point.score = determineScore(player);
+                point.winner = parseInt(player);
+                points.push(point);
+                return { result: true, point: point };
              }
 
-             if (typeof value == 'object' && (value.score || ["0", "1", "S", "A", "D", "R"].indexOf(String(value.winner)) >= 0)) {
+             if (typeof value == 'object' && (value.score || '01SAQDRP'.split('').indexOf(String(value.winner)) >= 0)) {
                 if (value.score) {
                    var sequence_score = checkSequence(value.score);
-                   if (!sequence_score) return { result: false, error: 'sequence', point: value.score };
+                   if (!sequence_score) return { result: false, error: 'sequence', score: value.score };
                    var winner = determineWinner(sequence_score);
                    if (value.winner && value.winner != winner) return { result: false, error: 'winner mismatch' };
                    value.winner = winner;
                    value.score = sequence_score;
-
-                   // legacy
-                   value.point = sequence_score;
                 } else {
-                   var server = nextService();
-                   if (['S', 'A'].indexOf(value.winner) >= 0) { value.winner = server; }
-                   if (['D', 'R'].indexOf(value.winner) >= 0) { value.winner = 1 - server; }
+                   if (['S', 'A', 'Q'].indexOf(value.winner) >= 0) { value.winner = server; }
+                   if (['D', 'R', 'P'].indexOf(value.winner) >= 0) { value.winner = 1 - server; }
+                   if (['Q', 'P'].indexOf(value.winner) >= 0) { point.result = 'Penalty'; }
+                   if (value.winner == 'A') point.result = 'Ace';
+                   if (value.winner == 'D') point.result = 'Double Fault';
+                   value.score = determineScore(value.winner);
                    value.winner = parseInt(value.winner);
-                   value.score = determinePoint(value.winner);
-
-                   // legacy
-                   value.point = determinePoint(value.winner);
                 }
                 value.set = options.id;
                 points.push(value);
@@ -505,23 +508,23 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
              var sequence_score = checkSequence(value);
              if (sequence_score) {
-                var row = { winner: determineWinner(sequence_score), point: sequence_score, set: options.id };
-                points.push(row);
-                return { result: true, point: row };
+                var point = { winner: determineWinner(sequence_score), score: sequence_score, set: options.id };
+                points.push(point);
+                return { result: true, point: point };
              } 
              
-             return { result: false, error: 'invalid point', point: value };
+             return { result: false, error: 'invalid point', value: value };
           }
 
           function checkSequence(score) {
-             var last_row = points.length ? points[points.length - 1] : { point: '0-0' };
+             var last_row = points.length ? points[points.length - 1] : { score: '0-0' };
              var last_score = typeof last_row == 'object' ? last_row.score : last_row;
              last_score = last_score.indexOf('G') >= 0 ? '0-0' : last_score;
 
              var tiebreak_game = tiebreakGame();
              var valid_point = (progression[last_score] && progression[last_score].indexOf(score) >= 0);
 
-             if (point.indexOf('T') >= 0 && options.set.tiebreak && set.games().length >= options.set.games) {
+             if (score.indexOf('T') >= 0 && options.set.tiebreak && set.games().length >= options.set.games) {
                 return checkTiebreak(score) ? score : false;
              }
 
@@ -561,8 +564,8 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
           }
 
           function validTiebreakScoreValue(score) {
-             var score = score.split('-').map(function(m) { return m[m.length - 1] == 'T' ? 1 : 0 }).reduce(function(a, b){return a+b;});
-             if (score == 2) return score.split('T').join('').split('-').map(function(m) { return parseInt(m); });
+             var tees = score.split('-').map(function(m) { return m[m.length - 1] == 'T' ? 1 : 0 }).reduce(function(a, b){return a+b;});
+             if (tees == 2) return score.split('T').join('').split('-').map(function(m) { return parseInt(m); });
              return false;
           }
 
@@ -591,7 +594,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                    var pw = String(points[i]);      // point winner
                 }
 
-                if (pw == '' || ["0", "1", "S", "A", "D", "R"].indexOf(pw) < 0) { continue; }
+                if (pw == '' || '01SAQDRP'.split('').indexOf(pw) < 0) { continue; }
 
                 // check for new game
                 if (Math.abs(gpc[0] - gpc[1]) == game_goal) {        
@@ -637,8 +640,8 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
                 }
 
                 // transform pw to 0/1 notation
-                if (['S', 'A'].indexOf(pw) >= 0) { pw = server; }
-                if (['D', 'R'].indexOf(pw) >= 0) { pw = 1 - server; }
+                if (['S', 'A', 'Q'].indexOf(pw) >= 0) { pw = server; }
+                if (['D', 'R', 'P'].indexOf(pw) >= 0) { pw = 1 - server; }
 
                 lpw = pw;
 
@@ -697,6 +700,7 @@ if (!Array.prototype.last) { Array.prototype.last = function() { return this[thi
 
           }
 
+          // add setpoint and matchpoint
           function checkBreakpoint(point_number) {
              var score = points[point_number].score;
              var server = points[point_number].server;

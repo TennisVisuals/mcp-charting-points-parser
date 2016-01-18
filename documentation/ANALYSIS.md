@@ -9,15 +9,6 @@ Please view the README file for details on installing the mcp-charting-points-pa
 > a = p.analysis
 ```
 
-**playerMatches()** returns an array of all matches containing the specified player.  Call the function a second time to create an array of matches between two players.
-
-```
-> djoker = a.playerMatches(p.matches, 'Djokovic')
-...
-> NDvRF = a.playerMatches(djoker, 'Federer')
-...
-```
-
 **rallyDepth()** counts the number of points in a match which have a return of service, and differentiates returns which finish a point and returns which include an indication of the depth of the return. In the example below there are three "return-other" shots; these are returns of service which have no depth information and do not finish the point.
 
 ```

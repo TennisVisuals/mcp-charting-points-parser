@@ -5,18 +5,6 @@ module.exports = function() {
 
    // Analysis
 
-   analyze.playerMatches = playerMatches;
-   function playerMatches(match_array, player_name) {
-      var matches = [];
-      match_array.forEach(function(match) {
-         var players = match.match.players();
-         if (players[0].search(player_name) >= 0 || players[1].search(player_name) >= 0) {
-            matches.push(match);
-         }
-      });
-      return matches;
-   }
-
    analyze.serveAnalysis = serveAnalysis;
    function serveAnalysis(points, verbose) {
       var serve_types = {};

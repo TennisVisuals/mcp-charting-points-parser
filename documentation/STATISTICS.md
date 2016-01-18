@@ -5,6 +5,21 @@ The statistics package is a work in progress.
 
 Please see the README file for details on installing the mcp-charting-points-parser.  These notes assume familiarity and continue from the example given in the README.
 
+**selectPoints()** selects points from a submitted array of points by matching attributes.
+```
+s.selectPoints(match.points(), { set: 0 })
+s.selectPoints(match.points(), { server: 1 })
+s.selectPoints(match.points(), { winner: 1 })
+s.selectPoints(match.points(), { result: 'Ace' })
+s.selectPoints(match.points(), { score: '40-40' })
+s.selectPoints(match.points(), { scores: ['0-15', '15-0'] })
+```
+for convenience:
+```
+s.selectPoints(match.points(), { scores: ['Deuce Court'] })
+s.selectPoints(match.points(), { scores: ['Ad Court'] })
+```
+
 **counters()** reduces raw point data into numbers from which statistics can be calculated.
 ```
 > s = p.statistics

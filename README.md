@@ -106,43 +106,37 @@ The winner of the point would be:
 > players[point.winner]
 'Novak Djokovic'
 ```
+**playerMatches()** returns an array of all matches containing the specified player.  Call the function a second time to create an array of matches between two players.
+
+```
+> djoker = p.playerMatches(p.matches, 'Djokovic')
+...
+> NDvRF = p.playerMatches(djoker, 'Federer')
+...
+```
 ### Analysis & Statistics
-Be sure to check out the **Analysis** and **Statistics** modules which you can read about in the documentation
+Be sure to check out the functions available in the **Analysis** and **Statistics** modules which you can read about in the documentation folder.
 
 ### Convenience
-Each match UMO can be queried to find specific points, given the set, game and score. This can be useful in debugging. Sets and Games begin at 0, so the first point of the 7th Game of the 1st Set can be accessed using the function **pointIndex(*set*, *game*)**:
+To make writing analysis functions easier...
+
+**shotSplitter(*shot_sequence*)** parses a shot sequence string into an array of shots.
+
+**findShotPattern(*points, shot_pattern, [reverse(boolean)]*)** filters an array of points by looking for a specified shot pattern. By default searches beginning with the serve.  To search from the concluding shot, pass 'true' as the final parameter.
+
+Accepts any degree of detail: shot type, direction, depth, position, error.
 ```
-> match.pointIndex(0,6)
-42
+ t = p.findShotPattern(points, ['6', 'f3', 'b3','b'])
+ t = p.findShotPattern(points, p.shotSplitter('6f3b3b'))
+
+ t = p.findShotPattern(points, ['b', 'b', '#'], true)
 ```
-If you know the point score:
+To skip the serve:
 ```
-> match.pointIndex(0,6, '30-15')
-44
-```
-To search and display all point details, use **findPoint()**.
-```
-> match.findPoint(0,6,'15-0')
-{ serves: [ '4' ],
-  rally: [ 'f29', 'f3*' ],
-  terminator: '*',
-  result: 'Winner',
-  serve: 1,
-  code: '4f29f3*|',
-  winner: 0,
-  score: '15-0',
-  set: 0,
-  server: 0,
-  game: 6 }
-```
-You can use an optional final parameter to make the search 'lazy', which will search for '15-0' as well as '0-15'.
-```
-> match.findPoint(0,6,'15-0', true)
-...
+t = p.findShotPattern(points, ['', 'b', 'b'])
 ```
 
 ### Point Translation
-Several convenience functions are provided for working with MCP match data.
 
 **decipherPoint()** provides an english-language translation of a point.
 ```
