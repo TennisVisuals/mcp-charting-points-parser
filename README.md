@@ -7,18 +7,17 @@ Uses the Universal Match Object (UMO) https://github.com/TennisVisuals/universal
 - CSV point files downloaded from: https://github.com/JeffSackmann/tennis_MatchChartingProject
 
 #### Installation
-- Create project directory 'mcpParse'
 - Download .zip file
-- Unzip in project directory
-- move MCP .csv files into mcpParse/cache/ sub-directory
+- Unzip, which creates 'mcp-charting-points-parser-master' directory
+- move MCP .csv files you wish to use into /cache/ sub-directory
 *(two example files are provided, 'example' and 'testing')*
 
-Navigate into the 'mcpParse' directory and:
+Navigate into the 'mcp-charting-points-parser-master' directory and:
 ```
 npm install
 ```
 #### Module Usage
-Navigate to the directory above the project directory:
+While still inside the project directory:
 ```
 node
 

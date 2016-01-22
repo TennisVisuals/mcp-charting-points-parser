@@ -12,7 +12,7 @@ module.exports = function() {
    var mismatches = 0;
 
    // cached files
-   var cache_default = './mcpParse/cache/';
+   var cache_default = './cache/';
 
    // external module dependencies
    var fs             = require('fs');
