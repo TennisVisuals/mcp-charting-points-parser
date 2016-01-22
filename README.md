@@ -141,7 +141,7 @@ To skip the serve:
 ```
 To find matching shots where the server is player '0':
 ```
-> t.filter(point => point.server == 0)
+> sp = t.filter(point => point.server == 0)
 ```
 
 ### Point Translation
