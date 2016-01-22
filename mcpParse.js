@@ -866,9 +866,31 @@ module.exports = function() {
    }
 
    // facilitate aggregate stats across a number of matches
+   // searched for player is player 0 in combined results
    mcp.combineMatchesPoints = combineMatchesPoints;
-   function combineMatchesPoints (matches) {
-      // Array.array.prototype.concat
+   function combineMatchesPoints (player_name, matches) {
+      var c_points = [];
+      for (var m=0; m < matches.length; m++) {
+         var m_players = matches[m].match.players();
+         var m_points = matches[m].match.points();
+         if (m_players[0].search(player_name) >= 0 && m_players[1].search(player_name) >= 0) continue;
+         if (m_players[0].search(player_name) >= 0) {
+            Array.prototype.push.apply(c_points, m_points);
+            continue;
+         } else if (m_players[1].search(player_name) >= 0) {
+            var player_index = 1;
+         } else {
+            continue;
+         }
+         m_points.forEach(function(point) {
+            var new_point = (JSON.parse(JSON.stringify(point)));
+            new_point.server = 1 - new_point.server;
+            new_point.winner = 1 - new_point.winner;
+            new_point.match = m;
+            c_points.push(new_point);
+         });
+      }
+      return c_points;
    }
 
    // shot pattern is an array of shots
