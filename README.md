@@ -119,20 +119,29 @@ Be sure to check out the functions available in the **Analysis** and **Statistic
 ### Convenience
 To make writing analysis functions easier...
 
+**combineMatchesPoints(*player_name, matches*)** combines points from an array of matches (such as 'djoker' from the example above). Specified player is player '0' in the resulting array of points.
+```
+> points = p.combineMatchesPoints('Djokovic', djoker)
+```
+
 **shotSplitter(*shot_sequence*)** parses a shot sequence string into an array of shots.
 
 **findShotPattern(*points, shot_pattern, [reverse(boolean)]*)** filters an array of points by looking for a specified shot pattern. By default searches beginning with the serve.  To search from the concluding shot, pass 'true' as the final parameter.
 
 Accepts any degree of detail: shot type, direction, depth, position, error.
 ```
- t = p.findShotPattern(points, ['6', 'f3', 'b3','b'])
- t = p.findShotPattern(points, p.shotSplitter('6f3b3b'))
+> t = p.findShotPattern(points, ['6', 'f3', 'b3','b'])
+> t = p.findShotPattern(points, p.shotSplitter('6f3b3b'))
 
- t = p.findShotPattern(points, ['b', 'b', '#'], true)
+> t = p.findShotPattern(points, ['b', 'b', '#'], true)
 ```
 To skip the serve:
 ```
-t = p.findShotPattern(points, ['', 'b', 'b'])
+> t = p.findShotPattern(points, ['', 'b', 'b'])
+```
+To find matching shots where the server is player '0':
+```
+> t.filter(point => point.server == 0)
 ```
 
 ### Point Translation
