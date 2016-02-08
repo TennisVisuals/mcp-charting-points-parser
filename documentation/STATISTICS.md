@@ -20,8 +20,8 @@ Please see the README file for details on installing the mcp-charting-points-par
 ```
 for convenience:
 ```
-> s.selectPoints(match.points(), { scores: ['Deuce Court'] })
-> s.selectPoints(match.points(), { scores: ['Ad Court'] })
+> s.selectPoints(match.points(), { scores: 'Deuce Court' })
+> s.selectPoints(match.points(), { scores: 'Ad Court' })
 ```
 
 **counters()** reduces raw point data into numbers from which statistics can be calculated.
