@@ -130,14 +130,15 @@ To make writing analysis functions easier...
 
 Accepts any degree of detail: shot type, direction, depth, position, error.
 ```
-> t = p.findShotPattern(points, ['6', 'f3', 'b3','b'])
-> t = p.findShotPattern(points, p.shotSplitter('6f3b3b'))
+> q = p.sequence
+> t = q.findShotPattern(points, ['6', 'f3', 'b3','b'])
+> t = q.findShotPattern(points, q.shotSplitter('6f3b3b'))
 
-> t = p.findShotPattern(points, ['b', 'b', '#'], true)
+> t = q.findShotPattern(points, ['b', 'b', '#'], true)
 ```
 To skip the serve:
 ```
-> t = p.findShotPattern(points, ['', 'b', 'b'])
+> t = q.findShotPattern(points, ['', 'b', 'b'])
 ```
 To find matching shots where the server is player '0':
 ```
@@ -148,7 +149,7 @@ To find matching shots where the server is player '0':
 
 **decipherPoint()** provides an english-language translation of a point.
 ```
-> p.decipherPoint(point)
+> q.decipherPoint(point)
 [ 'T Serve',
   'Backhand cross-court; Close to Baseline',
   'Forehand down the line',
@@ -157,7 +158,7 @@ To find matching shots where the server is player '0':
 ```
 **decipherSequence()** provides an english-language translation of an MCP shot sequence. An optional second argument enables passing the point score (e.g. '0-15') which aids in determining the trajectory of the return of service.
 ```
-> p.decipherSequence('6f=37b+3b3z#', '0-15')
+> q.decipherSequence('6f=37b+3b3z#', '0-15')
 [ 'T Serve',
   'Forehand at the Baseline to the right side; Within Service Boxes',
   'Backhand approach shot cross-court',
@@ -166,7 +167,7 @@ To find matching shots where the server is player '0':
 ```
 **decipherShot()** provides an english-language translation of a single MCP shot. The point score is an optional parameter.
 ```
-> p.decipherShot('6*', '0-15')
+> q.decipherShot('6*', '0-15')
 { sequence: 'T Serve; Ace',
   full_sequence: 'T Serve, Winner',
   direction: 1 }
