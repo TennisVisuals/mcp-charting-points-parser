@@ -1,4 +1,4 @@
-module.exports = function() {
+!function() { 
 
    // module container
    var statistics = {};
@@ -147,7 +147,7 @@ module.exports = function() {
 
          var total_service          = validValue(c.ServedPoints, p);
          var second_serves          = validValue(c.Serves2nd, p);
-         var first_serves           = total_service - second_serves;
+         var first_serves_in        = total_service - second_serves;
 
          var opp_total_service      = validValue(c.ServedPoints, 1 - p);
          var opp_2nd_serves         = validValue(c.Serves2nd, 1 - p);
@@ -155,9 +155,10 @@ module.exports = function() {
          var combined_total_service = total_service + opp_total_service;
 
          ps[p].PctPointsWon         = cpct(validValue(c.PointsWon, p), combined_total_service);
-         ps[p].PctServe1stIn        = cpct(first_serves, total_service);
+         ps[p].PctPointsWonService  = cpct(validValue(c.PointsWonServes, p), validValue(c.ServedPoints, p));
 
-         ps[p].PctPointsWon1st      = cpct(validValue(c.PointsWonServes1st, p), first_serves);
+         ps[p].PctServe1stIn        = cpct(first_serves_in, total_service);
+         ps[p].PctPointsWon1st      = cpct(validValue(c.PointsWonServes1st, p), first_serves_in);
 
          ps[p].PctAces              = validPct(c.ServesAce, c.ServedPoints, p);
          ps[p].PctDoubleFaults      = validPct(c.DoubleFaults, c.ServedPoints, p);
@@ -168,6 +169,12 @@ module.exports = function() {
          var opp_bpt_conv           = validValue(c.BreakpointsConverted, 1 - p);
          ps[p].BreakpointsSaved     = opp_breakpoints - opp_bpt_conv;
          ps[p].BreakpointsFaced     = opp_breakpoints;
+
+         var breakpoints            = validValue(c.Breakpoints, p);
+         var breakpoints_converted  = validValue(c.BreakpointsConverted, p);
+         ps[p].Breakpoints          = breakpoints;
+         ps[p].BreakpointsConverted = breakpoints_converted;
+         ps[p].PctBreakpointsConverted = cpct(breakpoints_converted, breakpoints);
 
          var winners                = validValue(c.Winners, p);
          var aces                   = validValue(c.ServesAce, p);
@@ -196,27 +203,26 @@ module.exports = function() {
       for (var p=0; p < 2; p++) {
 
          // Serve Basics
-         
          ps[p].PctServePointsWon    = validPct(c.PointsWonServes, c.ServedPoints, p);
 
          var total_service          = validValue(c.ServedPoints, p);
          var second_serves          = validValue(c.Serves2nd, p);
-         var first_serves           = total_service - second_serves;
+         var first_serves_in        = total_service - second_serves;
 
          ps[p].PctServeAce          = cpct(validValue(c.ServesAce, p),    total_service);
-         ps[p].PctServeAce1st       = cpct(validValue(c.ServesAce1st, p), first_serves);
+         ps[p].PctServeAce1st       = cpct(validValue(c.ServesAce1st, p), first_serves_in);
          ps[p].PctServeAce2nd       = cpct(validValue(c.ServesAce2nd, p), second_serves);
 
          ps[p].PctServeWinners      = cpct(validValue(c.ServeWinners, p), total_service);
-         ps[p].PctServeWinners1st   = cpct(validValue(c.ServeWinners1st, p), first_serves);
+         ps[p].PctServeWinners1st   = cpct(validValue(c.ServeWinners1st, p), first_serves_in);
          ps[p].PctServeWinners2nd   = cpct(validValue(c.ServeWinners2nd, p), second_serves);
 
          ps[p].PctServeForcedErrors    = cpct(validValue(c.ServeForcedErrors, p), total_service);
-         ps[p].PctServeForcedErrors1st = cpct(validValue(c.ServeForcedErrors1st, p), first_serves);
+         ps[p].PctServeForcedErrors1st = cpct(validValue(c.ServeForcedErrors1st, p), first_serves_in);
          ps[p].PctServeForcedErrors2nd = cpct(validValue(c.ServeForcedErrors2nd, p), second_serves);
 
          ps[p].PctServeWon3Rally    = cpct(validValue(c.PointsWonServe3Rally, p), total_service);
-         ps[p].PctServeWon3Rally1st = cpct(validValue(c.PointsWonServe3Rally1st, p), first_serves);
+         ps[p].PctServeWon3Rally1st = cpct(validValue(c.PointsWonServe3Rally1st, p), first_serves_in);
          ps[p].PctServeWon3Rally2nd = cpct(validValue(c.PointsWonServe3Rally2nd, p), second_serves);
 
          var serves_wide_1st        = validValue(c.ServesWide1st, p);
@@ -224,7 +230,7 @@ module.exports = function() {
          var serves_wide            = serves_wide_1st + serves_wide_2nd;
 
          ps[p].PctServeWide         = cpct(serves_wide, total_service);
-         ps[p].PctServeWide1st      = cpct(serves_wide_1st, first_serves);
+         ps[p].PctServeWide1st      = cpct(serves_wide_1st, first_serves_in);
          ps[p].PctServeWide2nd      = cpct(serves_wide_2nd, second_serves);
 
          var serves_body_1st        = validValue(c.ServesBody1st, p);
@@ -232,7 +238,7 @@ module.exports = function() {
          var serves_body            = serves_body_1st + serves_body_2nd;
 
          ps[p].PctServeBody         = cpct(serves_body, total_service);
-         ps[p].PctServeBody1st      = cpct(serves_body_1st, first_serves);
+         ps[p].PctServeBody1st      = cpct(serves_body_1st, first_serves_in);
          ps[p].PctServeBody2nd      = cpct(serves_body_2nd, second_serves);
 
          var serves_t_1st           = validValue(c.ServesT1st, p);
@@ -240,7 +246,7 @@ module.exports = function() {
          var serves_t               = serves_t_1st + serves_t_2nd;
 
          ps[p].PctServeT            = cpct(serves_t, total_service);
-         ps[p].PctServeT1st         = cpct(serves_t_1st, first_serves);
+         ps[p].PctServeT1st         = cpct(serves_t_1st, first_serves_in);
          ps[p].PctServeT2nd         = cpct(serves_t_2nd, second_serves);
 
          // Direction
@@ -323,5 +329,7 @@ module.exports = function() {
    function serveOutcomes(point) {
    }
 
-   return statistics;
-}
+   if (typeof define === "function" && define.amd) define(statistics); else if (typeof module === "object" && module.exports) module.exports = statistics;
+   this.statistics = statistics;
+ 
+}();

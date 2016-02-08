@@ -1,4 +1,4 @@
-module.exports = function() {
+!function() { 
 
    // module container
    var analyze = {};
@@ -139,5 +139,7 @@ module.exports = function() {
       return { rally_shots: rally_shots, rally_depth: rally_depth, matches: matches_with_rally_depth };
    }
 
-   return analyze;
-}
+   if (typeof define === "function" && define.amd) define(analyze); else if (typeof module === "object" && module.exports) module.exports = analyze;
+   this.analyze = analyze;
+ 
+}();
