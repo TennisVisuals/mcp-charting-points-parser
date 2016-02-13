@@ -1,5 +1,5 @@
-# Points and Shots
-##### Using mcpParse.js to analyze all points and shots in the MCP Repository
+# Set Scores: Points and Shots
+##### Using mcpParse.js to discover maximum and minimum points and shots for all sets in the MCP Repository
 
 The code included with this example defines three functions:
   - analyzeMatches()
