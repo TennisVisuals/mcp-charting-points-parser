@@ -133,3 +133,4 @@ Each distribution can then be saved for incorporation into an Exploding Box Plot
 > fs.writeFileSync('max_atp.dat', JSON.stringify(atpMinMax))
 > fs.writeFileSync('max_wta.dat', JSON.stringify(wtaMinMax))
 ```
+The exported files are included in the data directory for this example.
