@@ -1,0 +1,103 @@
+# Points and Shots
+##### Using mcpParse.js to analyze all points and shots in the MCP Repository
+
+The code included with this example defines three functions:
+  - analyzeMatches()
+  - whenComplete()
+  - minMax()
+
+**analyzeMatches()** goes through each match and separates sets into "bins" based on the score.  
+
+**whenComplete()** is a convenience function that is submitted as a callback to the *parseArchive()* function provided by the mcpParse module.  It adds the result in the *analyses* array for safekeeping.
+
+**minMax()** is used to analyze each "bin" of sets to find the minimum and maximum shots/points for each set score.
+
+#### Requirements:
+  - Node
+  - CSV point files downloaded from: https://github.com/JeffSackmann/tennis_MatchChartingProject
+
+### Tutorial
+Launch node and load the base module and the example module:
+```
+var p = require('./mcpParse')();
+var s = require('./shotsAndPoints')();
+```
+Use the following command to parse the first archive:
+
+```
+> p.parseArchive('charting-m-points', s.whenComplete)
+Loading File:./cache/charting-m-points.csv
+Please be patient if file is large...
+Parsing CSV File...
+145297 points loaded
+Separating Matches...
+958 matches
+Matches Loaded
+Parsing Shot Sequences...
+==================-----------------------
+958 Matches Successfully Parsed
+Analysis Complete
+
+```
+The "Shots and Points" modules keeps track of each invocation in the *analyses* array:
+
+```
+> Object.keys(s.analyses[0])
+[ 'bins', 'distribution' ]
+
+> s.analyses[0].distribution.length
+2373
+
+> Object.keys(s.analyses[0].bins)
+[ '6-0', '6-1', '6-2', '6-3', '6-4', '7-5', '7-6' ]
+
+> s.analyses[0].bins['6-1'].length
+242
+
+```
+There are 2373 sets in the 958 Matches of the MCP archive of Men's matches; 242 of those are '6-1' sets.
+
+Find the minimum and maximum points-per-game (PPG), points-per-set (PPS), shots-per-game (SPG), and shots-per-set (SPS) for the entire distribution or an individual bin:
+
+```
+> atpMinMax = s.minMax(s.analyses[0].distribution)
+
+> s.minMax(s.analyses[0].bins['6-1'])
+```
+
+Run the same command for the MCP archive of Womens' matches:
+
+```
+p.parseArchive('charting-w-points', s.whenComplete)
+```
+There are 1934 sets in the 958 Matches of the MCP archive of Men's matches.
+```
+> wtaMinMax = s.minMax(s.analyses[1].distribution)
+```
+
+You can then combine the set distributions for both Men and Women:
+```
+full_distribution = [];
+full_distribution = full_distribution.concat(s.analyses[0].distribution);
+full_distribution = full_distribution.concat(s.analyses[1].distribution);
+```
+You can then find the min/max of the full distribution for all MCP matches:
+
+```
+> s.minMax(full_distribution)
+```
+The women dominate the stats, with one exception:
+```
+ { h2h: 'Viktor Troicki v. Grigor Dimitrov',
+   tournament: 'Sydney',
+   score: '7-6',
+   SPS: 878 }
+```
+Each distribution can then be saved for incorporation into an Exploding Box Plot...
+```
+> fs.writeFileSync('atp.dat', JSON.stringify({ "data": s.analyses[0].distribution }))
+> fs.writeFileSync('wta.dat', JSON.stringify({ "data": s.analyses[1].distribution }))
+> fs.writeFileSync('atp_wta.dat', JSON.stringify({ "data": full_distribution }))
+> fs.writeFileSync('max_atp.dat', JSON.stringify(atpMinMax))
+> fs.writeFileSync('max_wta.dat', JSON.stringify(wtaMinMax))
+```
