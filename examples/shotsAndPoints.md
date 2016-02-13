@@ -55,7 +55,7 @@ The "Shots and Points" module keeps track of each invocation in the *analyses* a
 242
 
 ```
-There are 2373 sets and 145,297 points in the 958 Matches of the MCP archive of Men's matches; 242 of those are '6-1' sets.
+There are 2373 sets and 145,297 points in the 958 Matches of the MCP Men's archive; 242 of those are '6-1' sets.
 
 The module also keeps track of total shots processed:
 ```
@@ -89,7 +89,7 @@ Analysis Complete
 > s.analyses[1].distribution.length
 1934
 ```
-There are 1934 sets and 115,484 points in the 852 Matches of the MCP archive of Men's matches.
+There are 1934 sets and 115,484 points in the 852 Matches of the MCP Women's archive.
 ```
 > s.total_shots
 1244120
