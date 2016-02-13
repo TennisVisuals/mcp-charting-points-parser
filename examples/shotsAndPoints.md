@@ -8,7 +8,7 @@ The code included with this example defines three functions:
 
 **analyzeMatches()** goes through each match and separates sets into "bins" based on the score.  
 
-**whenComplete()** is a convenience function that is submitted as a callback to the *parseArchive()* function provided by the mcpParse module.  It adds the result in the *analyses* array for safekeeping.
+**whenComplete()** is a convenience function that is submitted as a callback to the *parseArchive()* function (provided by the mcpParse module).  It adds the result to the *analyses* array for safekeeping.
 
 **minMax()** is used to analyze each "bin" of sets to find the minimum and maximum shots/points for each set score.
 
