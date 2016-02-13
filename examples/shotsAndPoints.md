@@ -1,12 +1,12 @@
 # Set Scores: Points and Shots
-##### Using mcpParse.js to discover maximum and minimum points and shots for all sets in the MCP Repository
+##### Using mcpParse.js to discover maximum and minimum points and shots for sets in the MCP Repository
 
 The code included with this example defines three functions:
   - analyzeMatches()
   - whenComplete()
   - minMax()
 
-**analyzeMatches()** goes through each match and separates sets into "bins" based on the score.  
+**analyzeMatches()** goes through each match and separates sets into "bins" based on the score.  *Final sets without tiebreaks are not included.*
 
 **whenComplete()** is a convenience function that is submitted as a callback to the *parseArchive()* function (provided by the mcpParse module).  It adds the result to the *analyses* array for safekeeping.
 
@@ -16,7 +16,7 @@ The code included with this example defines three functions:
   - Node
   - CSV point files downloaded from: https://github.com/JeffSackmann/tennis_MatchChartingProject
 
-### Tutorial
+### Example Usage
 Launch node and load the base module and the example module:
 ```
 var p = require('./mcpParse')();
@@ -39,7 +39,7 @@ Parsing Shot Sequences...
 Analysis Complete
 
 ```
-The "Shots and Points" modules keeps track of each invocation in the *analyses* array:
+The "Shots and Points" module keeps track of each invocation in the *analyses* array:
 
 ```
 > Object.keys(s.analyses[0])
@@ -57,7 +57,13 @@ The "Shots and Points" modules keeps track of each invocation in the *analyses* 
 ```
 There are 2373 sets in the 958 Matches of the MCP archive of Men's matches; 242 of those are '6-1' sets.
 
-Find the minimum and maximum points-per-game (PPG), points-per-set (PPS), shots-per-game (SPG), and shots-per-set (SPS) for the entire distribution or an individual bin:
+The module also keeps track of total shots processed:
+```
+> s.total_shots
+682846
+```
+
+Use **minMax()** to find the minimum and maximum points-per-game (PPG), points-per-set (PPS), shots-per-game (SPG), and shots-per-set (SPS) for the entire distribution or an individual bin:
 
 ```
 > atpMinMax = s.minMax(s.analyses[0].distribution)
@@ -65,35 +71,48 @@ Find the minimum and maximum points-per-game (PPG), points-per-set (PPS), shots-
 > s.minMax(s.analyses[0].bins['6-1'])
 ```
 
-Run the same command for the MCP archive of Womens' matches:
+Run the same command for the MCP archive of Women's matches:
 
 ```
 p.parseArchive('charting-w-points', s.whenComplete)
 ```
 There are 1934 sets in the 958 Matches of the MCP archive of Men's matches.
 ```
+> s.total_shots
+1244120
+```
+There is a total of 1,244,120 shots for all sets processed (includes men's and women's).
+
+Use **minMax()** to find values for sets in women's matches:
+```
 > wtaMinMax = s.minMax(s.analyses[1].distribution)
 ```
-
-You can then combine the set distributions for both Men and Women:
+You can then combine the set distributions for both Men and Women...
 ```
 full_distribution = [];
 full_distribution = full_distribution.concat(s.analyses[0].distribution);
 full_distribution = full_distribution.concat(s.analyses[1].distribution);
 ```
-You can then find the min/max of the full distribution for all MCP matches:
+...and find the min/max of the full distribution for all MCP matches:
 
 ```
 > s.minMax(full_distribution)
 ```
-The women dominate the stats, with one exception:
+The women dominate the stats, with two exceptions: minimum points per set and maximum shots per set:
 ```
- { h2h: 'Viktor Troicki v. Grigor Dimitrov',
-   tournament: 'Sydney',
-   score: '7-6',
-   SPS: 878 }
+min:
+{ h2h: 'Hyeon Chung v. Liang Chi Huang',
+  tournament: 'Kaohsiung',
+  score: '6-0',
+  PPS: 28 }
+
+max:
+{ h2h: 'Viktor Troicki v. Grigor Dimitrov',
+ tournament: 'Sydney',
+ score: '7-6',
+ SPS: 878 }
 ```
-Each distribution can then be saved for incorporation into an Exploding Box Plot...
+Each distribution can then be saved for incorporation into an Exploding Box Plot... which will be the next published example.
 ```
 > fs.writeFileSync('atp.dat', JSON.stringify({ "data": s.analyses[0].distribution }))
 > fs.writeFileSync('wta.dat', JSON.stringify({ "data": s.analyses[1].distribution }))

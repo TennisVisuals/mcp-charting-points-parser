@@ -4,7 +4,6 @@ module.exports = function() {
    var snp = {};
 
    snp.analyses = [];
-   snp.types = [];
 
    snp.analyzeMatches = analyzeMatches;
    function analyzeMatches(matches) {
@@ -17,7 +16,6 @@ module.exports = function() {
          var players = match.players();
          sets.forEach((s) => {
             var score = s.score() ? s.score().game_score.split('(')[0].split('-').sort().reverse().join('-') : '';
-            if (snp.types.indexOf(score) < 0) snp.types.push(score);
             if (score && ['6-0', '6-1', '6-2', '6-3', '6-4', '7-5', '7-6'].indexOf(score) >= 0) {
                var games = s.games().length;
                var points = s.points().length;
