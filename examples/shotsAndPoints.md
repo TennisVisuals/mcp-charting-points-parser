@@ -55,7 +55,7 @@ The "Shots and Points" module keeps track of each invocation in the *analyses* a
 242
 
 ```
-There are 2373 sets in the 958 Matches of the MCP archive of Men's matches; 242 of those are '6-1' sets.
+There are 2373 sets and 145,297 points in the 958 Matches of the MCP archive of Men's matches; 242 of those are '6-1' sets.
 
 The module also keeps track of total shots processed:
 ```
@@ -67,16 +67,29 @@ Use **minMax()** to find the minimum and maximum points-per-game (PPG), points-p
 
 ```
 > atpMinMax = s.minMax(s.analyses[0].distribution)
-
 > s.minMax(s.analyses[0].bins['6-1'])
 ```
 
-Run the same command for the MCP archive of Women's matches:
+Run the **parseArchive()** command for the MCP archive of Women's matches:
 
 ```
-p.parseArchive('charting-w-points', s.whenComplete)
+> p.parseArchive('charting-w-points', s.whenComplete)
+Loading File:./cache/charting-w-points.csv
+Please be patient if file is large...
+Parsing CSV File...
+115484 points loaded
+Separating Matches...
+852 matches
+Matches Loaded
+Parsing Shot Sequences...
+=====================----------------------
+852 Matches Successfully Parsed
+Analysis Complete
+
+> s.analyses[1].distribution.length
+1934
 ```
-There are 1934 sets in the 958 Matches of the MCP archive of Men's matches.
+There are 1934 sets and 115,484 points in the 852 Matches of the MCP archive of Men's matches.
 ```
 > s.total_shots
 1244120
