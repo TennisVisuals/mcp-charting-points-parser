@@ -4,6 +4,7 @@ module.exports = function() {
    var snp = {};
 
    snp.analyses = [];
+   snp.total_shots = 0;
 
    snp.analyzeMatches = analyzeMatches;
    function analyzeMatches(matches) {
@@ -14,12 +15,14 @@ module.exports = function() {
          var year = m.tournament.date.getFullYear();
          var sets = match.sets();
          var players = match.players();
+         var gid = (players.join('') + tournament + year).replace(/ /g,'');
          sets.forEach((s) => {
             var score = s.score() ? s.score().game_score.split('(')[0].split('-').sort().reverse().join('-') : '';
             if (score && ['6-0', '6-1', '6-2', '6-3', '6-4', '7-5', '7-6'].indexOf(score) >= 0) {
                var games = s.games().length;
                var points = s.points().length;
                var shots = s.points().map(p => p.rally.length + 1).reduce((a, b) => (a+b));
+               snp.total_shots += shots;
                var ppg = (points / games).toFixed(2);
                var spg = (shots / games).toFixed(2);
                var h2h = players[0] + ' v. ' + players[1];
@@ -30,7 +33,8 @@ module.exports = function() {
                      "PPG"          :  ppg,
                      "SPG"          :  spg,
                      "Tournament"   :  tournament,
-                     "h2h"            :  h2h
+                     "h2h"          :  h2h,
+                     "gid"          :  gid
                });
             }
          });
