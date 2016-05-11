@@ -6,28 +6,35 @@ module.exports = function() {
    ipwl.analyzeMatches = analyzeMatches;
    function analyzeMatches(matches) {
       var results = [];
-      wlrs = [];
+      var emptyfull = [];
       matches.forEach((m) => {
          var match = m.match;
+         var score = match.score().match_score;
          var tournament = m.tournament.name;
+         var round = m.tournament.round;
          var gender = m.tournament.division;
          var year = m.tournament.date.getFullYear();
          var players = match.players();
          var gid = (players.join('') + tournament + year).replace(/ /g,'');
-         var h2h = players[0] + ' v. ' + players[1];
 
          var points = inPlay(match.points());
          var winner = match.score().winner ? players.indexOf(match.score().winner) : undefined;
 
          var wlr = wlRatio(points);
-         wlrs.push({ h2h: h2h, wlr: wlr });
+         var we = winerr(points);
 
-         if (winner) {
+         if (winner != undefined) {
+            var h2h = match.score().winner + ' def. ' + match.score().loser;
             results.push({
                player   : players[0],
                outcome  : winner == 0 ? 'won' : 'lost',
+               gender   : gender == 'M' ? 'ATP' : 'WTA',
                goutcome : winner == 0 ? (gender == 'M' ? 'M Won' : 'W Won') : (gender == 'M' ? 'M Lost' : 'W Lost'),
-               h2h      : players[0] + ' v. ' + players[1],
+               score    : score,
+               tournament: tournament,
+               round    : round,
+               year     : year,
+               h2h      : h2h,
                fwl      : wlr.f0,
                bwl      : wlr.b0,
                gid      : gid
@@ -36,19 +43,44 @@ module.exports = function() {
             results.push({
                player   : players[1],
                outcome  : winner == 1 ? 'won' : 'lost',
+               gender   : gender == 'M' ? 'ATP' : 'WTA',
                goutcome : winner == 1 ? (gender == 'M' ? 'M Won' : 'W Won') : (gender == 'M' ? 'M Lost' : 'W Lost'),
-               h2h      : players[1] + ' v. ' + players[0],
+               score    : score,
+               tournament: tournament,
+               round    : round,
+               year     : year,
+               h2h      : h2h,
                fwl      : wlr.f1,
                bwl      : wlr.b1,
                gid      : gid
             });
+
+            emptyfull.push({
+               gender      : gender == 'M' ? 'ATP' : 'WTA',
+               score       : score,
+               tournament  : tournament,
+               round       : round,
+               year        : year,
+               h2h         : h2h,
+               winner      : match.score().winner,
+               loser       : match.score().loser,
+               win_w2ufe   : we[winner].w2ufe,
+               win_tw2ufe  : we[winner].tw2ufe,
+               win_w2te    : we[winner].w2te,
+               los_w2ufe   : we[1 - winner].w2ufe,
+               los_tw2ufe  : we[1 - winner].tw2ufe,
+               los_w2te    : we[1 - winner].w2te,
+            });
          }
       })
 
-      return results;
+      return { wlratio: results, emptyfull: emptyfull };
    }
 
-   var inPlay = function(points) { return points.filter(f => f.rally ? f.rally.length > 1 : false) };
+   // var inPlay = function(points) { return points.filter(f => f.rally ? f.rally.length > 1 : false) };
+   var inPlay = function(points) { 
+      return points.filter(f => f.rally ? (f.rally.length > 1 || (f.result && f.rally.length == 1 && f.result.indexOf('Forced Error') != 0)) : false) 
+   };
    var wonBy = function(points, winner) { return points.filter(f => f.winner == winner); }
 
    ipwl.handCount = handCount;
@@ -146,6 +178,48 @@ module.exports = function() {
          if (shot.indexOf(backhands[d]) >= 0) return 'Backhand';
       }
       return 'Unknown';
+   }
+
+   function winerr(points) {
+      // reproduction of Winners FH/BH stat
+      var wb0 = wonBy(points, 0);
+      var wbf0 = wb0.filter(f => finalShotHand(f) == 'Forehand' && f.result == 'Winner');
+      var wbb0 = wb0.filter(f => finalShotHand(f) == 'Backhand' && f.result == 'Winner');
+      var wb1 = wonBy(points, 1);
+      var wbf1 = wb1.filter(f => finalShotHand(f) == 'Forehand' && f.result == 'Winner');
+      var wbb1 = wb1.filter(f => finalShotHand(f) == 'Backhand' && f.result == 'Winner');
+
+      // reproduction of UFE stat
+      var ue0 = wb1.filter(f => (f.result.indexOf('Unforced Error') >= 0))
+      var df0 = wb1.filter(f => (f.result.indexOf('Double Fault') >= 0))
+      var ue1 = wb0.filter(f => (f.result.indexOf('Unforced Error') >= 0))
+      var df1 = wb0.filter(f => (f.result.indexOf('Double Fault') >= 0))
+      var lbfue0 = ue0.filter(f => finalShotHand(f) == 'Forehand').length
+      var lbbue0 = ue0.filter(f => finalShotHand(f) == 'Backhand').length
+      var lbfue1 = ue1.filter(f => finalShotHand(f) == 'Forehand').length
+      var lbbue1 = ue1.filter(f => finalShotHand(f) == 'Backhand').length
+
+      var fe0 = wb1.filter(f => (f.result.indexOf('Forced Error') >= 0 && f.rally.length > 1))
+      var fe1 = wb0.filter(f => (f.result.indexOf('Forced Error') >= 0 && f.rally.length > 1))
+      var lbffe0 = fe0.filter(f => finalShotHand(f) == 'Forehand')
+      var lbbfe0 = fe0.filter(f => finalShotHand(f) == 'Backhand')
+      var lbffe1 = fe1.filter(f => finalShotHand(f) == 'Forehand')
+      var lbbfe1 = fe1.filter(f => finalShotHand(f) == 'Backhand')
+
+      var pte0 = wbf0.length + wbb0.length + ue0.length + fe0.length;
+      var pte1 = wbf1.length + wbb1.length + ue1.length + fe1.length;
+
+      var w2ufe0 = ((wbf0.length + wbb0.length) / ue0.length).toFixed(2);
+      var w2ufe1 = ((wbf1.length + wbb1.length) / ue1.length).toFixed(2);
+      var tw2ufe0 = ((wbf0.length + wbb0.length + fe1.length) / ue0.length).toFixed(2);
+      var tw2ufe1 = ((wbf1.length + wbb1.length + fe0.length) / ue1.length).toFixed(2);
+      var w2te0 = ((wbf0.length + wbb0.length) / (ue0.length + fe0.length)).toFixed(2); 
+      var w2te1 = ((wbf1.length + wbb1.length) / (ue1.length + fe1.length)).toFixed(2); 
+
+      return { 
+         0: { w2ufe: w2ufe0, tw2ufe: tw2ufe0, w2te: w2te0 },
+         1: { w2ufe: w2ufe1, tw2ufe: tw2ufe1, w2te: w2te1 }
+      }
    }
 
    return ipwl;
