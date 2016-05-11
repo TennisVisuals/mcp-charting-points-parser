@@ -196,6 +196,8 @@ module.exports = function() {
       return 'Unknown';
    }
 
+   // recreates calculations from Nikita Taparia's article on "Point Enders"
+   // https://medium.com/the-tennis-notebook/tennis-note-32-90984d2d9386
    function winerr(points) {
       // points "Won By" each player
       var wb0 = wonBy(points, 0);
