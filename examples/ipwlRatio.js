@@ -6,7 +6,7 @@ module.exports = function() {
    ipwl.analyzeMatches = analyzeMatches;
    function analyzeMatches(matches) {
       var results = [];
-      var emptyfull = [];
+      var dominance = [];
       matches.forEach((m) => {
          var match = m.match;
          var score = match.score().match_score;
@@ -56,29 +56,44 @@ module.exports = function() {
                gid      : gid
             });
 
-            emptyfull.push({
+            dominance.push({
+               player      : match.score().winner,
+               outcome     : 'won',
                gender      : gender == 'M' ? 'ATP' : 'WTA',
+               h2h         : h2h,
                score       : score,
                tournament  : tournament,
                round       : round,
                year        : year,
-               h2h         : h2h,
-               winner      : match.score().winner,
-               loser       : match.score().loser,
                win_w2ufe   : we[winner].w2ufe,
                win_tw2ufe  : we[winner].tw2ufe,
                win_w2te    : we[winner].w2te,
+               domF        : we[winner].domF,
+               domB        : we[winner].domB
+            });
+
+            dominance.push({
+               player      : match.score().loser,
+               outcome     : 'lost',
+               gender      : gender == 'M' ? 'ATP' : 'WTA',
+               h2h         : h2h,
+               score       : score,
+               tournament  : tournament,
+               round       : round,
+               year        : year,
                los_w2ufe   : we[1 - winner].w2ufe,
                los_tw2ufe  : we[1 - winner].tw2ufe,
                los_w2te    : we[1 - winner].w2te,
+               domF        : we[1 - winner].domF,
+               domB        : we[1 - winner].domB
             });
          }
       })
 
-      return { wlratio: results, emptyfull: emptyfull };
+      return { wlratio: results, dominance: dominance };
    }
 
-   // var inPlay = function(points) { return points.filter(f => f.rally ? f.rally.length > 1 : false) };
+   // excludes points ending in Ace, Serve Winner or Double Fault
    var inPlay = function(points) { 
       return points.filter(f => f.rally ? (f.rally.length > 1 || (f.result && f.rally.length == 1 && f.result.indexOf('Forced Error') != 0)) : false) 
    };
