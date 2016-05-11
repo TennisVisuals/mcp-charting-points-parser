@@ -5,8 +5,9 @@ module.exports = function() {
 
    ipwl.analyzeMatches = analyzeMatches;
    function analyzeMatches(matches) {
-      var results = [];
+      var winloss = [];
       var dominance = [];
+      var wlrMatches = [];
       matches.forEach((m) => {
          var match = m.match;
          var score = match.score().match_score;
@@ -26,34 +27,50 @@ module.exports = function() {
 
          if (winner != undefined) {
             var h2h = match.score().winner + ' def. ' + match.score().loser;
-            results.push({
-               player   : players[0],
-               outcome  : winner == 0 ? 'won' : 'lost',
-               gender   : gender == 'M' ? 'ATP' : 'WTA',
-               goutcome : winner == 0 ? (gender == 'M' ? 'M Won' : 'W Won') : (gender == 'M' ? 'M Lost' : 'W Lost'),
-               score    : score,
-               tournament: tournament,
-               round    : round,
-               year     : year,
-               h2h      : h2h,
-               fwl      : wlr.f0,
-               bwl      : wlr.b0,
-               gid      : gid
+            winloss.push({
+               player      : players[0],
+               outcome     : winner == 0 ? 'won' : 'lost',
+               gender      : gender == 'M' ? 'ATP' : 'WTA',
+               goutcome    : winner == 0 ? (gender == 'M' ? 'M Won' : 'W Won') : (gender == 'M' ? 'M Lost' : 'W Lost'),
+               score       : score,
+               tournament  : tournament,
+               round       : round,
+               year        : year,
+               h2h         : h2h,
+               fwl         : wlr.f0,
+               bwl         : wlr.b0,
+               gid         : gid
             });
 
-            results.push({
-               player   : players[1],
-               outcome  : winner == 1 ? 'won' : 'lost',
-               gender   : gender == 'M' ? 'ATP' : 'WTA',
-               goutcome : winner == 1 ? (gender == 'M' ? 'M Won' : 'W Won') : (gender == 'M' ? 'M Lost' : 'W Lost'),
-               score    : score,
-               tournament: tournament,
-               round    : round,
-               year     : year,
-               h2h      : h2h,
-               fwl      : wlr.f1,
-               bwl      : wlr.b1,
-               gid      : gid
+            winloss.push({
+               player      : players[1],
+               outcome     : winner == 1 ? 'won' : 'lost',
+               gender      : gender == 'M' ? 'ATP' : 'WTA',
+               goutcome    : winner == 1 ? (gender == 'M' ? 'M Won' : 'W Won') : (gender == 'M' ? 'M Lost' : 'W Lost'),
+               score       : score,
+               tournament  : tournament,
+               round       : round,
+               year        : year,
+               h2h         : h2h,
+               fwl         : wlr.f1,
+               bwl         : wlr.b1,
+               gid         : gid
+            });
+
+            var wlr_fb0 = (wlr.f0 / wlr.b0).toFixed(2);
+            var wlr_fb1 = (wlr.f1 / wlr.b1).toFixed(2);
+            wlrMatches.push({
+               h2h         : h2h,
+               score       : score,
+               tournament  : tournament,
+               round       : round,
+               year        : year,
+               winner      : match.score().winner,
+               loser       : match.score().loser,
+               gender      : gender == 'M' ? 'ATP' : 'WTA',
+               winner_fbr  : winner == 0 ? wlr_fb0 : wlr_fb1,
+               loser_fbr   : winner == 0 ? wlr_fb1 : wlr_fb0,
+               gid         : gid
             });
 
             dominance.push({
@@ -69,7 +86,8 @@ module.exports = function() {
                win_tw2ufe  : we[winner].tw2ufe,
                win_w2te    : we[winner].w2te,
                domF        : we[winner].domF,
-               domB        : we[winner].domB
+               domB        : we[winner].domB,
+               gid         : gid
             });
 
             dominance.push({
@@ -85,12 +103,13 @@ module.exports = function() {
                los_tw2ufe  : we[1 - winner].tw2ufe,
                los_w2te    : we[1 - winner].w2te,
                domF        : we[1 - winner].domF,
-               domB        : we[1 - winner].domB
+               domB        : we[1 - winner].domB,
+               gid         : gid
             });
          }
       })
 
-      return { wlratio: results, dominance: dominance };
+      return { wlratio: winloss, dominance: dominance, wlrMatches: wlrMatches };
    }
 
    // excludes points ending in Ace, Serve Winner or Double Fault
