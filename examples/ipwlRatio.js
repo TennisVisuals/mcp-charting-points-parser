@@ -19,6 +19,7 @@ module.exports = function() {
 
          var points = inPlay(match.points());
          var winner = match.score().winner ? players.indexOf(match.score().winner) : undefined;
+         if (winner == 1) score = reverseScore(score);
 
          var wlr = wlRatio(points);
          var we = winerr(points);
@@ -181,45 +182,99 @@ module.exports = function() {
    }
 
    function winerr(points) {
-      // reproduction of Winners FH/BH stat
+      // points "Won By" each player
       var wb0 = wonBy(points, 0);
+      var wb1 = wonBy(points, 1);
+
+      // "Winners" on forehand / backhand
       var wbf0 = wb0.filter(f => finalShotHand(f) == 'Forehand' && f.result == 'Winner');
       var wbb0 = wb0.filter(f => finalShotHand(f) == 'Backhand' && f.result == 'Winner');
-      var wb1 = wonBy(points, 1);
       var wbf1 = wb1.filter(f => finalShotHand(f) == 'Forehand' && f.result == 'Winner');
       var wbb1 = wb1.filter(f => finalShotHand(f) == 'Backhand' && f.result == 'Winner');
 
-      // reproduction of UFE stat
-      var ue0 = wb1.filter(f => (f.result.indexOf('Unforced Error') >= 0))
+      // "Double Faults"
       var df0 = wb1.filter(f => (f.result.indexOf('Double Fault') >= 0))
-      var ue1 = wb0.filter(f => (f.result.indexOf('Unforced Error') >= 0))
       var df1 = wb0.filter(f => (f.result.indexOf('Double Fault') >= 0))
+
+      // "Unforced Errors" 
+      var ue0 = wb1.filter(f => (f.result.indexOf('Unforced Error') >= 0))
+      var ue1 = wb0.filter(f => (f.result.indexOf('Unforced Error') >= 0))
+
+      // points lost by "Unforced Error" on forehand / backhand
       var lbfue0 = ue0.filter(f => finalShotHand(f) == 'Forehand').length
       var lbbue0 = ue0.filter(f => finalShotHand(f) == 'Backhand').length
       var lbfue1 = ue1.filter(f => finalShotHand(f) == 'Forehand').length
       var lbbue1 = ue1.filter(f => finalShotHand(f) == 'Backhand').length
 
+      // "Forced Errors"
       var fe0 = wb1.filter(f => (f.result.indexOf('Forced Error') >= 0 && f.rally.length > 1))
       var fe1 = wb0.filter(f => (f.result.indexOf('Forced Error') >= 0 && f.rally.length > 1))
+
+      // points lost by "Forced Errors" on forehand / backhand
       var lbffe0 = fe0.filter(f => finalShotHand(f) == 'Forehand')
       var lbbfe0 = fe0.filter(f => finalShotHand(f) == 'Backhand')
       var lbffe1 = fe1.filter(f => finalShotHand(f) == 'Forehand')
       var lbbfe1 = fe1.filter(f => finalShotHand(f) == 'Backhand')
 
-      var pte0 = wbf0.length + wbb0.length + ue0.length + fe0.length;
-      var pte1 = wbf1.length + wbb1.length + ue1.length + fe1.length;
+      // forehand /backhand shots that "Induced a Forced Error"
+      var fci0 = fe1;
+      var fcif0 = fci0.filter(f => findShot(f.rally[f.rally.length - 2]) == 'Forehand');
+      var fcib0 = fci0.filter(f => findShot(f.rally[f.rally.length - 2]) == 'Backhand');
+      var fci1 = fe0;
+      var fcif1 = fci1.filter(f => findShot(f.rally[f.rally.length - 2]) == 'Forehand');
+      var fcib1 = fci1.filter(f => findShot(f.rally[f.rally.length - 2]) == 'Backhand');
 
+      // total points ended by player shots
+      // "Induced a Forced Error" shots are deemed to have ended the point
+      // not the final "Forced Error"
+      var pte0 = wbf0.length + wbb0.length + ue0.length + fci0.length;
+      var pte1 = wbf1.length + wbb1.length + ue1.length + fci1.length;
+
+      // Ratio of Winners to Unforced Errors
       var w2ufe0 = ((wbf0.length + wbb0.length) / ue0.length).toFixed(2);
       var w2ufe1 = ((wbf1.length + wbb1.length) / ue1.length).toFixed(2);
-      var tw2ufe0 = ((wbf0.length + wbb0.length + fe1.length) / ue0.length).toFixed(2);
-      var tw2ufe1 = ((wbf1.length + wbb1.length + fe0.length) / ue1.length).toFixed(2);
+
+      // Ratio of "Total Winners" to "Unforced Errors"
+      // "Total Winners" includes "Winners" and shots "Inducing Forced Errors"
+      var tw2ufe0 = ((wbf0.length + wbb0.length + fci0.length) / ue0.length).toFixed(2);
+      var tw2ufe1 = ((wbf1.length + wbb1.length + fci1.length) / ue1.length).toFixed(2);
+
+      // Ratio of "Winners" to "Total Errors"
+      // "Total Errors" includes "Unforced Errors" and "Forced Errors"
       var w2te0 = ((wbf0.length + wbb0.length) / (ue0.length + fe0.length)).toFixed(2); 
       var w2te1 = ((wbf1.length + wbb1.length) / (ue1.length + fe1.length)).toFixed(2); 
 
+      // Total Shots for forehand / backhand for each player
+      var hc0 = handCount(points, 0);
+      var hc1 = handCount(points, 1);
+
+      // Dominance Calculation for forehand / backhand for each player
+      var domF0 = ((wbf0.length + fcif0.length - lbffe0.length) / hc0.f).toFixed(2);
+      var domB0 = ((wbb0.length + fcib0.length - lbbfe0.length) / hc0.b).toFixed(2);
+      var domF1 = ((wbf1.length + fcif1.length - lbffe1.length) / hc1.f).toFixed(2);
+      var domB1 = ((wbb1.length + fcib1.length - lbbfe1.length) / hc1.b).toFixed(2);
+
       return { 
-         0: { w2ufe: w2ufe0, tw2ufe: tw2ufe0, w2te: w2te0 },
-         1: { w2ufe: w2ufe1, tw2ufe: tw2ufe1, w2te: w2te1 }
+         0: { w2ufe: w2ufe0, tw2ufe: tw2ufe0, w2te: w2te0, domF: domF0, domB: domB0 },
+         1: { w2ufe: w2ufe1, tw2ufe: tw2ufe1, w2te: w2te1, domF: domF1, domB: domB1 }
       }
+   }
+
+   function reverseScore(score) {
+      // reverse set score if winner == 1
+      var score_split = score.split(',');
+      var reversed_scores = score_split.map(s => {
+         s = s.trim();
+         var tbscore = s.split('(');
+         if (tbscore.length > 1) {
+            var game_score = tbscore[0].split('-').reverse().join('-');
+         } else {
+            s = s.split('-').reverse().join('-');
+         }
+         if (tbscore[1]) s = game_score + '(' + tbscore[1];
+         return s;
+      });
+      return reversed_scores.reverse().join(', ');
    }
 
    return ipwl;
