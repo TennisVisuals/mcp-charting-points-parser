@@ -267,14 +267,13 @@ module.exports = function() {
          s = s.trim();
          var tbscore = s.split('(');
          if (tbscore.length > 1) {
-            var game_score = tbscore[0].split('-').reverse().join('-');
+            s = tbscore[0].split('-').reverse().join('-') + '(' + tbscore[1];
          } else {
             s = s.split('-').reverse().join('-');
          }
-         if (tbscore[1]) s = game_score + '(' + tbscore[1];
          return s;
       });
-      return reversed_scores.reverse().join(', ');
+      return reversed_scores.join(', ');
    }
 
    return ipwl;
