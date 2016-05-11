@@ -261,17 +261,14 @@ module.exports = function() {
    }
 
    function reverseScore(score) {
-      // reverse set score if winner == 1
-      var score_split = score.split(',');
-      var reversed_scores = score_split.map(s => {
+      var reversed_scores = score.split(',').map(s => {
          s = s.trim();
          var tbscore = s.split('(');
          if (tbscore.length > 1) {
-            s = tbscore[0].split('-').reverse().join('-') + '(' + tbscore[1];
+            return tbscore[0].split('-').reverse().join('-') + '(' + tbscore[1];
          } else {
-            s = s.split('-').reverse().join('-');
+            return s.split('-').reverse().join('-');
          }
-         return s;
       });
       return reversed_scores.join(', ');
    }
